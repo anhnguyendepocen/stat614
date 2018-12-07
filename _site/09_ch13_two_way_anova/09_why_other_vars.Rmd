@@ -1,0 +1,151 @@
+---
+title: "Adding Other Variables"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output:
+  beamer_presentation:
+    theme: "metropolis"
+    slide_level: 2
+urlcolor: "blue"
+---
+
+```{r setup, include=FALSE}
+ggplot2::theme_set(
+  ggplot2::theme_bw()
+  )
+knitr::opts_chunk$set(echo = FALSE,
+                      fig.height = 2.5, 
+                      fig.width = 4, 
+                      fig.align = "center")
+```
+
+## Objectives
+
+- Understand why we add other variables in our model.
+
+## Reason 1
+
+- You are actually interested in the effects of both variables 
+
+- E.g. pressure and temperature on espresso foam index.
+
+- If no interactions are present, then can have same power with fewer observations than by running two separate studies (one studying pressure and one studying temperature).
+
+    - Every observation contributes to estimating both effects, rather than having each observation contribute to estimating only one effect.
+
+## Reason 2
+
+- You suspect there is an interaction between the treatment of interest and some other variable.
+
+- Let's you look at the treatment effect at different levels of the nuisance variable.
+
+- Or if no interections are found, gives you an idea of the universality of the result.
+
+## Reason 3
+
+- Reduces variance, so easier to detect an effect.
+
+## Variance reduction
+
+- Separation of groups is distinct
+
+```{r, echo = FALSE}
+set.seed(3)
+library(ggplot2)
+n <- 30
+cat1 <- c(rep(0, n/2), rep(1, n/2))
+cat2 <- rep(c(0, 1), n/2)
+y <- 10 + 2.5 * cat1 + 2.6 * cat2 + rnorm(n)
+
+cat2 <- as.factor(cat2)
+
+qplot(jitter(cat1), y, group = cat2, color = cat2) +
+  scale_x_continuous(breaks = c(0, 1)) +
+  xlab("cat1")
+```
+
+## Variance reduction
+
+- Much more overlap
+
+```{r, echo = FALSE}
+qplot(jitter(rep(1, n)), y, group = cat2, color = cat2) +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  xlim(0.9, 1.1)
+```
+
+## Grouping
+
+- When you include a variable in an *experiment* just to reduce variability, this is called **grouping** and that variable is called the **grouping variable**.
+
+- When you apply grouping, you include the variable in the model whether or not it is significantly associated with the response.
+
+## Residuals
+
+```{r, message=FALSE}
+library(tidyverse)
+aout <- aov(y ~ as.factor(cat1) + cat2)
+aout2 <- aov(y ~ cat2)
+data.frame(With = resid(aout), Without = resid(aout2)) %>%
+  gather(key = "IncludeCat1", value = "Residual") %>%
+  ggplot(mapping = aes(x = IncludeCat1, y = Residual)) +
+  geom_boxplot()
+```
+
+## Reason 4
+
+- In **observational studies**, allows you to control for Simpson's paradox.
+
+- Simpson's Paradox: Strength or direction of an effect changes when you control for another variable.
+
+- In 2-way ANOVA, occurs because of unequal numbers of units in each group (unbalanced studies).
+
+
+## Simpson's Paradox
+
+- Blue is better at both levels of category 1
+
+```{r, echo = FALSE}
+set.seed(4)
+library(ggplot2)
+n <- 40
+cat2 <- c(1, 1, 1, 1, rep(0, n/2 - 4), 0, 0, 0, 0, rep(1, n/2 - 4))
+cat1 <- rep(c(1, 0), each = n/2)
+y <- 10 + 5 * cat1 + 2 * cat2 + rnorm(n)
+
+cat2 <- as.factor(cat2)
+
+qplot(jitter(cat1), y, group = cat2, color = cat2) +
+  scale_x_continuous(breaks = c(0, 1)) +
+  xlab("cat1")
+```
+
+## Simpson's Paradox
+
+- But when you aggregate it looks like Red is mostly better
+
+```{r, echo = FALSE}
+qplot(jitter(rep(1, n)), y, group = cat2, color = cat2) +
+  theme(axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()) +
+  xlim(0.9, 1.1)
+```
+
+
+## Simpson's Paradox
+
+- Red is overrepresented in the good level of category 1, and underrepresented in the bad level of category 1.
+
+- Another example: United has worse delay times than other airlines, but that's because they have a hub at O'Hare.
+
+
+## Simpson's Paradox
+
+- Not usually an issue in randomized experiments.
+
+- The randomization makes sure that nothing is over/underrepresented 
+
+

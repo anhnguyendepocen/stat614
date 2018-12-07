@@ -1,0 +1,100 @@
+---
+title: "Linear Models Assumptions Worksheet"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output: pdf_document
+urlcolor: "blue"
+bibliography: "../bib/614_bib.bib"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, fig.height = 3, fig.width = 4, fig.align = "center")
+```
+
+
+# Wine Consumption and Heart Disease
+
+Data frame `ex0823` contains the average wine consumption rates (in liters per person) and number of ischemic heart disease deaths (per 1,000 men aged 55 to 64 years old) for 18 industrial countries. Do these data suggest that the heart disease death rate is associated with average wine consumption? If so, how can that relationship be described? Do any countries have substantially higher or lower death rates than others with similar wine consumption rates? We will answer these questions.
+
+You can load these data into R using:
+```{r, echo = TRUE}
+library(Sleuth3)
+data(ex0823)
+head(ex0823)
+```
+
+1. What is the explanatory variable? What is the response variable? What are the observational units? Is this an observational study or a randomized experiment?
+
+```{block}
+- Explanatory: `Wine`
+- Response: `Mortality`
+- Observational Units: Country
+- This is an observational study.
+```
+
+
+2. Plot `Wine` vs `Mortality` to informally explore their relationship. Comment on any trends you notice.
+
+```{r}
+library(ggplot2)
+qplot(Wine, Mortality, data = ex0823)
+```
+
+```{block}
+Looks like a curved relationship. It seems that drinking more wine decreases mortality.
+```
+
+3. Fit an initial linear regression model and assess the fit. Comment on any problems you notice and suggest some possible solutions.
+
+```{r}
+lmout <- lm(Mortality ~ Wine, data = ex0823)
+resvec <- resid(lmout)
+fitvec <- fitted(lmout)
+qplot(fitvec, resvec) + geom_hline(yintercept = 0)
+```
+
+4. Apply the fixes you suggested in the previous problem. Reassess the assumptions of the linear model. Are the problems fixed? If not, iterate until the assumptions seem satisfied
+
+```{r}
+## Logging Mortality alone does not fix it.
+qplot(Wine, log(Mortality), data = ex0823)
+
+## Logging Wine alone fixes the linearity, but not the non-constant variance.
+qplot(log(Wine), Mortality, data = ex0823)
+lmout2 <- lm(Mortality ~ log(Wine), data = ex0823)
+resvec <- resid(lmout2)
+fitvec <- fitted(lmout2)
+qplot(fitvec, resvec) + geom_hline(yintercept = 0)
+
+## Logging both seems to fix all of our issues.
+qplot(log(Wine), log(Mortality), data = ex0823)
+lmout3 <- lm(log(Mortality) ~ log(Wine), data = ex0823)
+resvec <- resid(lmout3)
+fitvec <- fitted(lmout3)
+qplot(fitvec, resvec) + geom_hline(yintercept = 0)
+```
+
+5. Summarize the fits from your final model. Make sure that you include the appropriate interpretations on the coefficients.
+
+```{r}
+## Raw coefficients
+coef(lmout3)
+## Ratio of medians when double wine consumption
+2 ^ coef(lmout3)[2]
+## Percent reduction when double wine consumption
+1 - 2 ^ coef(lmout3)[2]
+
+## Corresponding Confidence intervals
+confint(lmout3)
+2 ^ confint(lmout3)[2, ]
+1 - 2 ^ confint(lmout3)[2, ]
+```
+
+```{block}
+Countries that consume twice as much wine tend to have a mortality rate 21.9% lower (95% CI of 15.5% to 27.7%).
+```
+
+
+
+
+

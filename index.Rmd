@@ -1,0 +1,83 @@
+---
+title: "Stat 614 Teaching Materials"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+I used the following materials when I taught Statistics 614 (Statistical Methods) in Fall 2018 at American University.
+
+This course was designed for non-statistics graduate students who would need to use statistical methods in preparation of their master's theses. Most of these students had very little (or no) statistics prior to this course, so I focused a great deal on the fundamentals of inference before introducing ANOVA and linear regression.
+
+I used the fantastic textbook [The Statistical Sleuth](http://www.statisticalsleuth.com/). I think this is the greatest treatment of statistical methods from a non-mathematical perspective that I have read. The authors introduce all methods using interesting examples and focus on statistical intuition, using only as much mathematics as is needed to understand the concepts (but no more). Their suggestions are practical, their reasoning is intuitive, and their writing is clear.
+
+
+1. [Handwritten Notes](./614_notes1.pdf): These are my handwritten notes, covering chapters 1 through 3. They are not meant to be read alone, but rather to be used in conjunction with a lot of the slide decks.
+2. [Course Outline](./00_course_outline/00_course_outline.pdf)
+3. R Introduction
+    - [EDA and R](./01_introduction_to_R/01_introduction_to_R.pdf)
+    - [Graphics Using `qplot()`](./qplot_cheatsheet/qplot_cheatsheet.pdf)
+    - [R Bootcamp](./Rbootcamp/Bootcamp_mkdn.pdf)
+    - [R Code for R Bootcamp](./Rbootcamp/Bootcamp_mkdn.R)
+4. Statistical Inference
+    - [Chapter 1 Case Studies](./02_chapter1/02_chapter1_case_studies.pdf)
+    - [Randomization Distributions](./02_chapter1/02_randomization_distribution.pdf)
+    - [Permutation Worksheet](./02_chapter1/02_worksheet.pdf)
+5. [Probability Review](./03_prob_review/03_prob_review.pdf)
+6. $t$-tools
+    - [Chapter 2 Case Studies](./04_chapter2_t_inference/04_case_studies.pdf)
+    - [Sampling Distributions](./04_chapter2_t_inference/04_sampling_distribution.pdf)
+    - [Interpreting Confidence Intervals](./04_chapter2_t_inference/04_ci_interpretation.pdf)
+    - [$t$-tools Worksheet](./04_chapter2_t_inference/04_worksheet.pdf)
+7. Assumptions of $t$-tools
+    - [Chapter 3 Case Studies](./05_chapter3_t_assumptions/05_case_studies.pdf)
+    - [Checking for Normality](./05_chapter3_t_assumptions/05_qqplots.pdf)
+    - [CLT Intuition](./05_chapter3_t_assumptions/05_clt.pdf)
+    - [Rainfall Analysis](./05_chapter3_t_assumptions/05_rainfall.pdf)
+    - [$t$-tools Assumptions Worksheet](./05_chapter3_t_assumptions/05_worksheet.pdf)
+8. [Sample Size Calculations](./05_chapter3_t_assumptions/05_sample_size_calculations.pdf)
+9. One-way ANOVA
+    - [Chapter 5 Case Studies](./06_chapter5_one_way_anova/06_case_studies.pdf)
+    - [Decoding Sums of Squares](./06_chapter5_one_way_anova/06_sums_of_squares.pdf)
+    - [One-way ANOVA in R](./06_chapter5_one_way_anova/06_one_way_anova_in_r.pdf)
+    - [Residual Plots](./06_chapter5_one_way_anova/06_resid_plots.pdf)
+    - [One-way ANOVA Worksheet](./06_chapter5_one_way_anova/06_worksheet.pdf)
+10. Linear Combinations
+    - [Chapter 6 Case Studies](./07_chapter6_linear_combinations/07_case_studies.pdf)
+    - [General Linear Hypothesis Tests in R](./07_chapter6_linear_combinations/07_linear_combos_in_R.pdf)
+11. Multiple Comparison
+    - [Multiple Comparisons](./08_simultaneous_inference/08_simultaneous_inference.pdf)
+    - [Ranking Exercise](./08_simultaneous_inference/ranking_exercise.docx): This goes with slide 7 in the [Multiple Comparisons](./08_simultaneous_inference/08_simultaneous_inference.pdf) slide deck.
+    - [Multiple Comparisons Worksheet](./08_simultaneous_inference/08_worksheet.pdf)
+12. Two-way ANOVA
+    - [Two-way ANOVA with Interactions](./09_ch13_two_way_anova/09_two_way_anova_interactions.pdf)
+    - [Additive Two-way ANOVA](./09_ch13_two_way_anova/09_two_way_anova_main_effects.pdf)
+    - [Why do we add other variables?](./09_ch13_two_way_anova/09_why_other_vars.pdf)
+    - [Generalizing to Multifactorial ANOVA](./09_ch13_two_way_anova/09_multifactor_anova.pdf)
+    - [Two-way ANOVA Worksheet](./09_ch13_two_way_anova/09_worksheet.pdf)
+13. Simple Linear Regression
+    - [Simple Linear Regression 1](./10_simple_linear_regression/10_simple_linear_regression.pdf)
+    - [Simple Linear Regression 2](./10_simple_linear_regression/10_linear_regression_extras.pdf)
+    - [Simple Linear Regression Worksheet](./10_simple_linear_regression/10_worksheet.pdf)
+14. Linear Model Assumptions
+    - [Linear Model Assumptions](./11_linear_model_assumptions/11_linear_model_assumptions.pdf)
+    - [Interpreting Log Transformations](./11_linear_model_assumptions/11_interpreting_log_transformations.pdf)
+    - [Voltage Analysis (with $F$-test lack-of-fit)](./11_linear_model_assumptions/11_case_study_analysis.pdf)
+    - [Linear Model Assumptions Worksheet](./11_linear_model_assumptions/11_worksheet.pdf)
+15. Multiple Linear Regression
+    - [Multiple Linear Regression](./12_multiple_regression/12_multiple_regression.pdf)
+    - [Multiple Regression EDA](./12_multiple_regression/12_multiple_regression_eda.pdf)
+    - [Creating New Explanatory Variables](./12_multiple_regression/12_limitless_possibilities.pdf)
+    - [Multiple Regression Worksheet](./12_multiple_regression/12_worksheet.pdf)
+16. Model Comparisons and Evaluation
+    - [General Strategy for Many Variables](./13_model_comparisons/13_general_strategy.pdf)
+    - [$F$-test for Nested Models](./13_model_comparisons/13_f_test_of_nested_models.pdf)
+    - [Non-nested Model Comparisons](./13_model_comparisons/13_non_nested_comparisons.pdf)
+    - [Dealing with Outliers](./14_model_assessment/14_outliers.pdf)
+    - [Model Selection Worksheet](./14_model_assessment/14_worksheet.pdf)
+
+

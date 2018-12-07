@@ -1,0 +1,94 @@
+---
+title: "02 Worksheet"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+```
+
+Read in the data from Case Study 1.1.2 from the `Sleuth3` R package.
+
+```{r}
+library(Sleuth3)
+data("case0102")
+head(case0102)
+```
+
+1. Create a boxplot for `Salary` vs `Sex`
+
+```{r, echo=FALSE}
+library(ggplot2)
+qplot(x = Sex, y = Salary, data = case0102, geom = "boxplot")
+```
+
+2. Calculate the mean salary for just the females.
+
+```{r, echo = FALSE}
+femave <- mean(case0102$Salary[case0102$Sex == "Female"])
+femave
+```
+
+
+3. Calculate the mean salary for just the males.
+
+```{r, echo = FALSE}
+malave <- mean(case0102$Salary[case0102$Sex == "Male"])
+malave
+```
+
+4. What is the difference in average salaries between males and females?
+
+```{r, echo = FALSE}
+malave - femave
+```
+
+
+5. Now we will walk through simulating the randomization distribution.
+
+a. The function `sample()` will permute the the elements of a vector. Try it out on `case0102$Sex`
+```{r}
+sample(case0102$Sex)
+```
+
+b. Take one permutation of `Sex` and recalculate the average salary difference between males and females.
+
+c. To automate this, consider the following code using the `replicate()` function
+```{r}
+sample_vec <- replicate(n = 100,
+                        expr = {
+                          a <- rnorm(1)
+                          b <- rnorm(2)
+                          diff <- b - a
+                          diff
+                        }
+                        )
+head(sample_vec)
+```
+Whatever is placed within the braces "{}" will be run `n` times. Anything printed (in this case `diff`) will be returned and placed in `sample_vec`. Now modify this code to create a permutation distribution.
+
+```{r, echo=FALSE}
+sample_vec <- replicate(n = 1000,
+                        expr = {
+                          newsex <- sample(case0102$Sex)
+                          a <- mean(case0102$Salary[newsex == "Female"])
+                          b <- mean(case0102$Salary[newsex == "Male"])
+                          diff <- b - a
+                          diff
+                        }
+                        )
+```
+
+d. Plot the permutation distribution and compare to the observed value calculated in 4.
+
+```{r, echo = FALSE}
+qplot(sample_vec, geom = "histogram", bins = 30) +
+  geom_vline(xintercept = malave - femave, col = 2, lty = 2)
+```
+
+
+
+
+

@@ -1,0 +1,179 @@
+---
+title: "Testing for Linear Combinations in Spock Example"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output:
+  beamer_presentation:
+    theme: "metropolis"
+    slide_level: 2
+urlcolor: "blue"
+---
+
+```{r setup, include=FALSE}
+ggplot2::theme_set(
+  ggplot2::theme_bw()
+  )
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.height = 2.5, 
+                      fig.width = 4, 
+                      fig.align = "center")
+```
+
+## Objectives
+
+- Demonstrate how to interact with linear combinations of means in R.
+
+- Analyze the Spock trial data in R.
+
+## Load in Data
+```{r}
+library(Sleuth3)
+library(ggplot2)
+data("case0502")
+```
+
+
+## Spock EDA
+
+```{r}
+qplot(Judge, Percent, data = case0502)
+```
+
+## Spock EDA
+
+```{r}
+qplot(Judge, Percent, data = case0502, geom = "boxplot")
+```
+
+## Before Fitting
+- Always make sure the grouping variable (the explanatory variable) is a "`factor`" with the `class()` function.
+```{r}
+class(case0502$Judge)
+```
+- Things will go wrong if this is any other type (even `logical` or `character` in the case of linear hypotheses)
+- You can force a variable to be a `factor` with the `as.factor()` function:
+```{r}
+case0502$Judge <- as.factor(case0502$Judge)
+```
+
+## Fit the full model
+- Use `aov()` function (for **A**nalysis **O**f **V**ariance) to fit the model that assumes $\mu_1$, $\mu_2$, \ldots, $\mu_I$ are all *different*.
+
+- Always save this output.
+
+- The **response** variable goes on the left of the tilde (`~`) and the **explanatory** variable goes to the right of the tilde.
+
+## Fit the full model
+```{r}
+aout_alldiff <- aov(Percent ~ Judge, data = case0502)
+aout_alldiff
+```
+
+## Wrong Parameterization
+
+```{r}
+coef(aout_alldiff)
+```
+
+- Returns estimates of $\mu$, $\delta_2$, $\delta_3$, $\delta_4$, $\delta_5$, $\delta_6$, $\delta_7$ in model where group $i$  has mean $\mu + \delta_i$.
+
+## Do this to get correct parameterization
+- **Subtracting 1** is notation for removing an "intercept column" and gives you the parameterization you expect.
+\footnotesize
+```{r}
+aout_alldiff <- aov(Percent ~ Judge - 1, data = case0502)
+coef(aout_alldiff)
+```
+\normalsize
+- Returns estimates of $\mu_1$, $\mu_2$, $\mu_3$, $\mu_4$, $\mu_5$, $\mu_6$, $\mu_7$ in model where group $i$ has mean $\mu_i$. 
+- **Never do this unless you are testing for linear combinations**
+- The above code will **ruin** an anova table (when you call `anova()` or `summary()`).
+
+
+
+## Linear Combinations
+
+- The book says "A computer can produce the averages and the pooled estimate of variability, but hand calculations are usually required from there."
+- But they don't know that there is *almost always* an R package that can do what you want (not true for any other statistical software).
+- We will use the `linearHypothesis()` function from the `car` packages to run a test for a general linear combination of means.
+```{r, eval=FALSE}
+install.packages("car")
+```
+```{r, message=FALSE}
+library(car)
+```
+
+## Look at order of factors
+
+- Use the `levels()` command to see what the order of the factors is.
+
+```{r}
+levels(case0502$Judge)
+```
+
+## Set up coefficient vector
+ 
+- The order is `("A", "B", "C", "D", "E", "F", "Spock's")`
+- The following coefficient vector will test against
+$$
+H_0:~\text{Spock's} - \frac{1}{6}A - \frac{1}{6}B - \frac{1}{6}C - \frac{1}{6}D - \frac{1}{6}E - \frac{1}{6}F = 0
+$$
+```{r}
+combo_vec1 <- c(-1/6, -1/6, -1/6, -1/6, -1/6, -1/6, 1)
+```
+- The following will test against
+$$
+H_0:~\frac{1}{3}A + \frac{1}{3}B + \frac{1}{3}C - \frac{1}{3}D - \frac{1}{3}E - \frac{1}{3}F = 0
+$$
+```{r}
+combo_vec2 <- c(1/3, 1/3, 1/3, -1/3, -1/3, -1/3, 0)
+```
+
+
+## Run the hypothesis test
+```{r}
+lhout <- linearHypothesis(model = aout_alldiff, 
+                          hypothesis.matrix = combo_vec1)
+lhout
+```
+
+## Show equivalent to $t$-test
+```{r, echo = FALSE, message=FALSE}
+library(tidyverse)
+case0502 %>%
+  group_by(Judge) %>%
+  summarize(mean = mean(Percent), sd = sd(Percent), n = n()) %>%
+  ungroup() ->
+  sumdat
+gamma_hat <- sum(combo_vec1 * sumdat$mean)
+sp <- sqrt(sum(aout_alldiff$residuals^2) / (nrow(case0502) - 7))
+segamma_hat <- sp * sqrt(sum(combo_vec1^2 / sumdat$n))
+tstat <- gamma_hat / segamma_hat
+```
+
+- $\hat{\gamma}$ turns out to be `r gamma_hat`
+- $SE(\hat{\gamma})$ turns out to be `r segamma_hat`
+- So the $t$-statistic is $\hat{\gamma} / SE(\hat{\gamma})$ = `r tstat`
+- We compare this to a $t_{n - I} = t_{46 - 7} = t_{39}$
+```{r}
+2 * pt(-5.67, df = 39)
+```
+```{r}
+lhout$`Pr(>F)`
+```
+
+## Correspondance
+
+- The $t$-statistic is the square root of the $F$-statistic
+- $t$-stat is -5.67
+```{r}
+sqrt(lhout$F)
+```
+
+
+
+
+
+
+
+

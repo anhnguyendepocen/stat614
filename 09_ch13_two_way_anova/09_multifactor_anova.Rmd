@@ -1,0 +1,357 @@
+---
+title: "Multi-factorial ANOVA"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output:
+  beamer_presentation:
+    theme: "metropolis"
+    slide_level: 2
+urlcolor: "blue"
+---
+
+```{r setup, include=FALSE}
+ggplot2::theme_set(
+  ggplot2::theme_bw()
+  )
+knitr::opts_chunk$set(echo = FALSE,
+                      fig.height = 2.5, 
+                      fig.width = 4, 
+                      fig.align = "center")
+```
+
+## Objectives
+
+- Brief summary of how we generalize to more than two factors.
+
+## Poker Case Study
+
+- `Skill`: `Expert`, `Average`
+- `Hand`: `Bad`, `Neutral`, `Good`
+- `Limit`: `Fixed`, `None`
+- `Cash`: Final cash balance
+
+Source: G. Meyer, M. von Meduna, T. Brosowski, T. Hayer (2012). "Is poker a Game of Skill or Chance? A Quasi-Experimental Study," Journal of Gambling Studies, Online First DOI 10.1007/s10899-012-9327-8
+
+## Data
+
+```{r, echo = TRUE}
+load("../data/poker_skill.rdata")
+head(poker)
+```
+
+
+
+```{r, echo = FALSE}
+library(ggplot2)
+library(ggthemes)
+# library(tidyverse)
+# poker <- read.table("../data/poker_skill.dat")
+# 
+# poker %>%
+#   transmute(Skill = factor(recode(V1, "1" = "Expert", "2" = "Average")),
+#             Hand  = factor(recode(V2, "1" = "Bad", "2" = "Neutral", "3" = "Good")),
+#             Limit = factor(recode(V3, "1" = "Fixed", "2" = "None")),
+#             Cash = V4) %>%
+#   as_tibble() ->
+#   poker
+# 
+# save(poker, file = "../data/poker_skill.rdata")
+```
+
+## Full Interaction Model
+
+- $Y_{ijk\ell} = \mu + \alpha_i + \beta_j + \gamma_k + (\alpha\beta)_{ij} + (\alpha\gamma)_{ik} + (\beta\gamma)_{jk} + (\alpha\beta\gamma)_{ijk} + \epsilon_{ijk\ell}$
+
+- $\mu$: baseline mean.
+
+- $\alpha_i$, $\beta_j$, $\gamma_k$: main effects
+
+- $(\alpha\beta)_{ij}$, $(\alpha\gamma)_{ik}$, $(\beta\gamma)_{jk}$: two-way interactions.
+
+- $(\alpha\beta\gamma)_{ijk}$: three-way interaction
+
+## Interaction Plots
+
+- One variable on $x$-axis
+
+- One variable as grouping variable.
+
+- One variable distinguish facets
+
+## Interaction Plots
+
+- Two-way interaction without three-way interaction: the effects change, but the interaction effect is the same between any pair of factors as the level of the third factor changes.
+
+- Three way interaction: the interaction effect changes as we plot at different levels of the third factors.
+
+## No Interactions
+
+- Facets are $z$
+
+```{r}
+x <- c(1, 1, 1, 1, 0, 0, 0, 0)
+y <- c(1, 1, 0, 0, 1, 1, 0, 0)
+z <- c(1, 0, 1, 0, 1, 0, 1, 0)
+w <- x + y + z
+meandf <- data.frame(x = as.factor(x), y = as.factor(y), z = as.factor(z), w = w)
+
+ggplot(data = meandf, mapping = aes(x = x, y = w, color = y, group = y)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(.~z) +
+  scale_color_colorblind()
+```
+
+## Two-way interactions ($x$ and $y$ only), no three-way interactions
+
+- Facets are $z$
+
+```{r}
+x <- c(1, 1, 1, 1, 0, 0, 0, 0)
+y <- c(1, 1, 0, 0, 1, 1, 0, 0)
+z <- c(1, 0, 1, 0, 1, 0, 1, 0)
+w <- x + y + z + x*y
+meandf <- data.frame(x = as.factor(x), y = as.factor(y), z = as.factor(z), w = w)
+
+ggplot(data = meandf, mapping = aes(x = x, y = w, color = y, group = y)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(.~z) +
+  scale_color_colorblind()
+```
+
+## Two-way interactions ($x$ and $y$ only), no three-way interactions
+
+- Facets are $y$
+
+```{r}
+ggplot(data = meandf, mapping = aes(x = x, y = w, color = z, group = z)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(.~y) +
+  scale_color_colorblind()
+```
+
+## Two-way interactions ($x$ and $y$ only), no three-way interactions
+
+- Facets are $y$
+
+```{r}
+ggplot(data = meandf, mapping = aes(x = z, y = w, color = x, group = x)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(.~y) +
+  scale_color_colorblind()
+```
+
+## Two-way interactions ($x$ and $y$ only), no three-way interactions
+
+- Facets are $x$
+
+```{r}
+ggplot(data = meandf, mapping = aes(x = z, y = w, color = y, group = y)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(.~x) +
+  scale_color_colorblind()
+```
+
+
+## Two way interactions (between all variables), no three way
+
+- Facets are $z$
+
+```{r}
+x <- c(1, 1, 1, 1, 0, 0, 0, 0)
+y <- c(1, 1, 0, 0, 1, 1, 0, 0)
+z <- c(1, 0, 1, 0, 1, 0, 1, 0)
+w <- x + y + z + x*y + x*z + y*z 
+meandf <- data.frame(x = as.factor(x), y = as.factor(y), z = as.factor(z), w = w)
+
+ggplot(data = meandf, mapping = aes(x = x, y = w, color = y, group = y)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(.~z) +
+  scale_y_continuous(breaks = 1:6) +
+  scale_color_colorblind()
+```
+
+
+
+## Three-way interactions
+
+- Facets are $z$
+
+```{r}
+x <- c(1, 1, 1, 1, 0, 0, 0, 0)
+y <- c(1, 1, 0, 0, 1, 1, 0, 0)
+z <- c(1, 0, 1, 0, 1, 0, 1, 0)
+w <- x + y + z + x*y + x*z + y*z + x * y * z
+meandf <- data.frame(x = as.factor(x), y = as.factor(y), z = as.factor(z), w = w)
+
+ggplot(data = meandf, mapping = aes(x = x, y = w, color = y, group = y)) +
+  geom_point() +
+  geom_line() +
+  facet_grid(.~z) +
+  scale_y_continuous(breaks = 1:7) +
+  scale_color_colorblind()
+```
+
+
+## Interaction Plots
+\small
+```{r, echo = TRUE, fig.height=2.5}
+qplot(x = Skill, y = Cash, color = Hand, 
+      group = Hand, facets = . ~ Limit, 
+      geom = "blank", data = poker) +
+  stat_summary(fun.y = mean, geom = "line")
+```
+\normalsize
+
+## Interaction Plots
+\small
+```{r, echo = TRUE, fig.height=2.5}
+qplot(x = Hand, y = Cash, color = Skill, 
+      group = Skill, facets = . ~ Limit, 
+      geom = "blank", data = poker) +
+  stat_summary(fun.y = mean, geom = "line")
+```
+\normalsize
+
+## Interaction Plots
+\small
+```{r, echo = TRUE, fig.height=2.5}
+qplot(x = Limit, y = Cash, color = Skill, 
+      group = Skill, facets = . ~ Hand, 
+      geom = "blank", data = poker) +
+  stat_summary(fun.y = mean, geom = "line")
+```
+\normalsize
+
+## Interaction Plots
+\small
+```{r, echo = TRUE, fig.height=2.5}
+qplot(x = Skill, y = Cash, color = Limit, 
+      group = Limit, facets = . ~ Hand, 
+      geom = "blank", data = poker) +
+  stat_summary(fun.y = mean, geom = "line")
+```
+\normalsize
+
+## Interaction Plots
+\small
+```{r, echo = TRUE, fig.height=2.5}
+qplot(x = Hand, y = Cash, color = Limit, 
+      group = Limit, facets = . ~ Skill, 
+      geom = "blank", data = poker) +
+  stat_summary(fun.y = mean, geom = "line")
+```
+\normalsize
+
+## Interaction Plots
+\small
+```{r, echo = TRUE, fig.height=2.5}
+qplot(x = Limit, y = Cash, color = Hand, 
+      group = Hand, facets = . ~ Skill, 
+      geom = "blank", data = poker) +
+  stat_summary(fun.y = mean, geom = "line")
+```
+\normalsize
+
+## In R
+```{r, echo = TRUE}
+## No evidence of a three-way interaction
+aout_cell <- aov(Cash ~ Skill * Hand * Limit, data = poker)
+summary(aout_cell)
+```
+
+## In R
+```{r, echo = TRUE}
+aout_sub <- aov(Cash ~ Skill + Hand + Limit + 
+                  Skill * Hand + Skill * Limit,
+                data = poker)
+summary(aout_sub)
+```
+
+## Residual Plots
+
+```{r, echo = TRUE, fig.height=2.5}
+fvec <- fitted(aout_sub)
+rvec <- resid(aout_sub)
+qplot(fvec, rvec, xlab = "Fitted", ylab = "Residuals")
+```
+
+
+## Still interesting 
+\footnotesize
+```{r, echo = TRUE}
+t(t(coef(aout_sub)))
+```
+\normalsize
+
+## Interpretations
+\begin{center}
+\footnotesize
+\begin{tabular}{l|l}
+Variable & Estimate\\
+\hline
+$\mu$       & 5.400\\
+$\alpha_1$  & 0 (by definition)\\
+$\alpha_2$  & 1.404\\
+$\beta_1$   & 0 (by definition)\\
+$\beta_2$   & 5.180\\
+$\beta_3$   & 9.270\\
+$\gamma_1$  & 0 (by definition)\\
+$\gamma_2$  & -1.910\\
+$(\alpha\beta)_{11}$ & 0 (by definition)\\
+$(\alpha\beta)_{12}$ & 0 (by definition)\\
+$(\alpha\beta)_{13}$ & 0 (by definition)\\
+$(\alpha\beta)_{21}$ & 0 (by definition)\\
+$(\alpha\beta)_{22}$ & -1.440\\
+$(\alpha\beta)_{23}$ & -4.124\\
+$(\alpha\gamma)_{11}$ & 0 (by definition)\\
+$(\alpha\gamma)_{12}$ & 0 (by definition)\\
+$(\alpha\gamma)_{21}$ & 0 (by definition)\\
+$(\alpha\gamma)_{22}$ & 2.520\\
+\end{tabular}
+\end{center}
+
+## Interpretations
+- $\alpha$ for skill level
+- $\beta$ for hand
+- $\gamma$ for limit
+
+- Mean difference between experts with good hands and experts with bad hands is
+\begin{align*}
+\mu& + \alpha_2 + \beta_3 + \gamma_k + (\alpha\beta)_{23} + (\alpha\gamma)_{2k}\\
+&-\left[\mu + \alpha_2 + \beta_1 + \gamma_k + (\alpha\beta)_{21} + (\alpha\gamma)_{2k}\right]\\
+&= \mu + \alpha_2 + \beta_3 + \gamma_k + (\alpha\beta)_{23} + (\alpha\gamma)_{2k}\\ &-\left[\mu + \alpha_2 + 0 + \gamma_k + 0 + (\alpha\gamma)_{2k}\right]\\
+&= \beta_3 + (\alpha\beta)_{23}\\
+&= 9.270 - 4.124 = 5.146
+\end{align*}
+
+
+## Interpretations
+- $\alpha$ for skill level
+- $\beta$ for hand
+- $\gamma$ for limit
+
+- Mean difference between non-experts with good hands and non-experts with bad hands is
+\begin{align*}
+\mu& + \alpha_1 + \beta_3 + \gamma_k + (\alpha\beta)_{13} + (\alpha\gamma)_{1k}\\
+&-\left[\mu + \alpha_1 + \beta_1 + \gamma_k + (\alpha\beta)_{11} + (\alpha\gamma)_{1k}\right]\\
+&= \beta_3\\
+&= 9.270
+\end{align*}
+
+- Experts benefit less from a quality hand?
+
+## Interpretations
+
+- Similarly ideas for limit.
+
+- SkillExpert:LimitNone > 0 indicates that experts benefit **more** from not having a limit.
+
+
+
+

@@ -1,0 +1,181 @@
+---
+title: "Sample Size Calculations"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output:
+  beamer_presentation:
+    theme: "metropolis"
+    slide_level: 2
+urlcolor: "blue"
+---
+
+```{r setup, include=FALSE}
+ggplot2::theme_set(ggplot2::theme_bw())
+knitr::opts_chunk$set(echo = TRUE, fig.height = 2.3, fig.width = 3, fig.align = "center")
+```
+
+## Learning Objectives
+
+- Intuitively Explain Power
+
+## Under $H_0$
+```{r, echo = FALSE}
+library(ggplot2)
+mu <- 120
+sigma <- 24
+n <- 100
+se <- sigma / sqrt(n)
+x <- seq(mu - 3 * se, mu + 3 * se, length = 100)
+y <- dnorm(x = x, mean = mu, sd = se)
+qplot(x, y, geom = "line", xlab = "xbar", ylab = "f(xbar)", main = "Distribution of Xbar\nwhen H0 is TRUE") +
+  theme_bw() +
+  xlim(107, 128)
+```
+
+
+## Under $H_0$
+
+- Critical Value
+
+```{r, echo = FALSE}
+qout <- qnorm(p = 0.025, mean = mu, sd = se)
+which_x <- x < qout
+polyx <- c(min(x[which_x]), x[which_x], max(x[which_x]), min(x[which_x]))
+polyy <- c(0, y[which_x], 0, 0)
+qplot(x, y, geom = "line", xlab = "xbar", ylab = "f(xbar)", main = "Distribution of Xbar\nwhen H0 is TRUE") +
+  theme_bw() +
+  geom_polygon(data = data.frame(polyx = polyx, polyy = polyy), mapping = aes(x = polyx, y = polyy), fill = "blue", alpha = 1/2) +
+  geom_vline(xintercept = qout, lty = 2) +
+  xlim(107, 128)
+```
+
+## Along with true distribution of $\bar{X}$.
+
+```{r, echo = FALSE}
+xnew <- seq(115 - 3 * se, 115 + 3 * se, length = 100)
+ynew <- dnorm(x = xnew, mean = 115, sd = se)
+qplot(x, y, geom = "line", xlab = "xbar", ylab = "f(xbar)", main = "True and Null Distribution of Xbar") +
+  theme_bw() +
+  geom_vline(xintercept = qout, lty = 2) +
+  geom_line(data = data.frame(xnew = xnew, ynew = ynew),
+            mapping = aes(x = xnew, y = ynew), lty = 2, col = 2) +
+  xlim(107, 128)
+```
+
+## The Power of the Test
+
+```{r, echo = FALSE}
+which_x <- xnew < qout
+polyx <- c(min(xnew[which_x]), xnew[which_x], max(xnew[which_x]), min(xnew[which_x]))
+polyy <- c(0, ynew[which_x], 0, 0)
+
+powerval <- pnorm(q = qout, mean = 115, sd = se)
+
+qplot(x, y, geom = "line", xlab = "xbar", ylab = "f(xbar)", main = paste0("Power = ", round(powerval, digits = 2))) +
+  theme_bw() +
+  geom_vline(xintercept = qout, lty = 2) +
+  geom_line(data = data.frame(xnew = xnew, ynew = ynew),
+            mapping = aes(x = xnew, y = ynew), lty = 2, col = 2) +
+   geom_polygon(data = data.frame(polyx = polyx, polyy = polyy), mapping = aes(x = polyx, y = polyy), fill = "red", alpha = 1/2) +
+  xlim(107, 128)
+```
+
+
+## Increase $n = 150$
+
+```{r, echo = FALSE}
+n <- 150
+se <- sigma / sqrt(n)
+x <- seq(mu - 3 * se, mu + 3 * se, length = 100)
+y <- dnorm(x = x, mean = mu, sd = se)
+
+xnew <- seq(115 - 3 * se, 115 + 3 * se, length = 100)
+ynew <- dnorm(x = xnew, mean = 115, sd = se)
+
+qout <- qnorm(p = 0.025, mean = mu, sd = se)
+
+which_x <- xnew < qout
+polyx <- c(min(xnew[which_x]), xnew[which_x], max(xnew[which_x]), min(xnew[which_x]))
+polyy <- c(0, ynew[which_x], 0, 0)
+
+powerval <- pnorm(q = qout, mean = 115, sd = se)
+
+qplot(x, y, geom = "line", xlab = "xbar", ylab = "f(xbar)", main = paste0("Power = ", round(powerval, digits = 2))) +
+  theme_bw() +
+  geom_vline(xintercept = qout, lty = 2) +
+  geom_line(data = data.frame(xnew = xnew, ynew = ynew),
+            mapping = aes(x = xnew, y = ynew), lty = 2, col = 2) +
+   geom_polygon(data = data.frame(polyx = polyx, polyy = polyy), mapping = aes(x = polyx, y = polyy), fill = "red", alpha = 1/2) +
+  xlim(107, 128)
+```
+
+
+## Increase $n = 200$
+
+```{r, echo = FALSE}
+n <- 200
+se <- sigma / sqrt(n)
+x <- seq(mu - 3 * se, mu + 3 * se, length = 100)
+y <- dnorm(x = x, mean = mu, sd = se)
+
+xnew <- seq(115 - 3 * se, 115 + 3 * se, length = 100)
+ynew <- dnorm(x = xnew, mean = 115, sd = se)
+
+qout <- qnorm(p = 0.025, mean = mu, sd = se)
+
+which_x <- xnew < qout
+polyx <- c(min(xnew[which_x]), xnew[which_x], max(xnew[which_x]), min(xnew[which_x]))
+polyy <- c(0, ynew[which_x], 0, 0)
+
+powerval <- pnorm(q = qout, mean = 115, sd = se)
+
+qplot(x, y, geom = "line", xlab = "xbar", ylab = "f(xbar)", main = paste0("Power = ", round(powerval, digits = 2))) +
+  theme_bw() +
+  geom_vline(xintercept = qout, lty = 2) +
+  geom_line(data = data.frame(xnew = xnew, ynew = ynew),
+            mapping = aes(x = xnew, y = ynew), lty = 2, col = 2) +
+   geom_polygon(data = data.frame(polyx = polyx, polyy = polyy), mapping = aes(x = polyx, y = polyy), fill = "red", alpha = 1/2) +
+  xlim(107, 128)
+```
+
+## Increase $n = 300$
+
+```{r, echo = FALSE}
+n <- 300
+se <- sigma / sqrt(n)
+x <- seq(mu - 3 * se, mu + 3 * se, length = 100)
+y <- dnorm(x = x, mean = mu, sd = se)
+
+xnew <- seq(115 - 3 * se, 115 + 3 * se, length = 100)
+ynew <- dnorm(x = xnew, mean = 115, sd = se)
+
+qout <- qnorm(p = 0.025, mean = mu, sd = se)
+
+which_x <- xnew < qout
+polyx <- c(min(xnew[which_x]), xnew[which_x], max(xnew[which_x]), min(xnew[which_x]))
+polyy <- c(0, ynew[which_x], 0, 0)
+
+powerval <- pnorm(q = qout, mean = 115, sd = se)
+
+qplot(x, y, geom = "line", xlab = "xbar", ylab = "f(xbar)", main = paste0("Power = ", round(powerval, digits = 2))) +
+  theme_bw() +
+  geom_vline(xintercept = qout, lty = 2) +
+  geom_line(data = data.frame(xnew = xnew, ynew = ynew),
+            mapping = aes(x = xnew, y = ynew), lty = 2, col = 2) +
+   geom_polygon(data = data.frame(polyx = polyx, polyy = polyy), mapping = aes(x = polyx, y = polyy), fill = "red", alpha = 1/2) +
+  xlim(107, 128)
+```
+
+
+## In R
+\footnotesize
+- `delta` = difference from the posited mean. Say 5 when the null mean is 120 and the alternative mean is 115.
+- `sd` = 30 (might have gotten this from a previous study)
+- `sig.level` = 0.05, rarely change this
+- `power` = 0.8, typical power value
+
+```{r}
+power.t.test(delta = 5, sd = 30, sig.level = 0.05, 
+             power = 0.8, type = "one.sample")
+```
+

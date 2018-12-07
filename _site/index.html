@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+
+<meta name="author" content="David Gerard" />
+
+<meta name="date" content="2018-12-07" />
+
+<title>Stat 614 Teaching Materials</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.0.13/css/fa-svg-with-js.css" rel="stylesheet" />
+<script src="site_libs/font-awesome-5.0.13/js/fontawesome-all.min.js"></script>
+<script src="site_libs/font-awesome-5.0.13/js/fa-v4-shims.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+  height: auto;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+
+<div class="container-fluid main-container">
+
+<!-- tabsets -->
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+</script>
+
+<!-- code folding -->
+
+
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Teaching Website for Statistical Methods (Stat 614)</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="data_list.html">Data</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/dcgerard/stat614">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Stat 614 Teaching Materials</h1>
+<h4 class="author"><em>David Gerard</em></h4>
+<h4 class="date"><em>2018-12-07</em></h4>
+
+</div>
+
+
+<p>I used the following materials when I taught Statistics 614 (Statistical Methods) in Fall 2018 at American University.</p>
+<p>This course was designed for non-statistics graduate students who would need to use statistical methods in preparation of their master’s theses. Most of these students had very little (or no) statistics prior to this course, so I focused a great deal on the fundamentals of inference before introducing ANOVA and linear regression.</p>
+<p>I used the fantastic textbook <a href="http://www.statisticalsleuth.com/">The Statistical Sleuth</a>. I think this is the greatest treatment of statistical methods from a non-mathematical perspective that I have read. The authors introduce all methods using interesting examples and focus on statistical intuition, using only as much mathematics as is needed to understand the concepts (but no more). Their suggestions are practical, their reasoning is intuitive, and their writing is clear.</p>
+<ol style="list-style-type: decimal">
+<li><a href="./614_notes1.pdf">Handwritten Notes</a>: These are my handwritten notes, covering chapters 1 through 3. They are not meant to be read alone, but rather to be used in conjunction with a lot of the slide decks.</li>
+<li><a href="./00_course_outline/00_course_outline.pdf">Course Outline</a></li>
+<li>R Introduction
+<ul>
+<li><a href="./01_introduction_to_R/01_introduction_to_R.pdf">EDA and R</a></li>
+<li><a href="./qplot_cheatsheet/qplot_cheatsheet.pdf">Graphics Using <code>qplot()</code></a></li>
+<li><a href="./Rbootcamp/Bootcamp_mkdn.pdf">R Bootcamp</a></li>
+<li><a href="./Rbootcamp/Bootcamp_mkdn.R">R Code for R Bootcamp</a></li>
+</ul></li>
+<li>Statistical Inference
+<ul>
+<li><a href="./02_chapter1/02_chapter1_case_studies.pdf">Chapter 1 Case Studies</a></li>
+<li><a href="./02_chapter1/02_randomization_distribution.pdf">Randomization Distributions</a></li>
+<li><a href="./02_chapter1/02_worksheet.pdf">Permutation Worksheet</a></li>
+</ul></li>
+<li><a href="./03_prob_review/03_prob_review.pdf">Probability Review</a></li>
+<li><span class="math inline">\(t\)</span>-tools
+<ul>
+<li><a href="./04_chapter2_t_inference/04_case_studies.pdf">Chapter 2 Case Studies</a></li>
+<li><a href="./04_chapter2_t_inference/04_sampling_distribution.pdf">Sampling Distributions</a></li>
+<li><a href="./04_chapter2_t_inference/04_ci_interpretation.pdf">Interpreting Confidence Intervals</a></li>
+<li><a href="./04_chapter2_t_inference/04_worksheet.pdf"><span class="math inline">\(t\)</span>-tools Worksheet</a></li>
+</ul></li>
+<li>Assumptions of <span class="math inline">\(t\)</span>-tools
+<ul>
+<li><a href="./05_chapter3_t_assumptions/05_case_studies.pdf">Chapter 3 Case Studies</a></li>
+<li><a href="./05_chapter3_t_assumptions/05_qqplots.pdf">Checking for Normality</a></li>
+<li><a href="./05_chapter3_t_assumptions/05_clt.pdf">CLT Intuition</a></li>
+<li><a href="./05_chapter3_t_assumptions/05_rainfall.pdf">Rainfall Analysis</a></li>
+<li><a href="./05_chapter3_t_assumptions/05_worksheet.pdf"><span class="math inline">\(t\)</span>-tools Assumptions Worksheet</a></li>
+</ul></li>
+<li><a href="./05_chapter3_t_assumptions/05_sample_size_calculations.pdf">Sample Size Calculations</a></li>
+<li>One-way ANOVA
+<ul>
+<li><a href="./06_chapter5_one_way_anova/06_case_studies.pdf">Chapter 5 Case Studies</a></li>
+<li><a href="./06_chapter5_one_way_anova/06_sums_of_squares.pdf">Decoding Sums of Squares</a></li>
+<li><a href="./06_chapter5_one_way_anova/06_one_way_anova_in_r.pdf">One-way ANOVA in R</a></li>
+<li><a href="./06_chapter5_one_way_anova/06_resid_plots.pdf">Residual Plots</a></li>
+<li><a href="./06_chapter5_one_way_anova/06_worksheet.pdf">One-way ANOVA Worksheet</a></li>
+</ul></li>
+<li>Linear Combinations
+<ul>
+<li><a href="./07_chapter6_linear_combinations/07_case_studies.pdf">Chapter 6 Case Studies</a></li>
+<li><a href="./07_chapter6_linear_combinations/07_linear_combos_in_R.pdf">General Linear Hypothesis Tests in R</a></li>
+</ul></li>
+<li>Multiple Comparison
+<ul>
+<li><a href="./08_simultaneous_inference/08_simultaneous_inference.pdf">Multiple Comparisons</a></li>
+<li><a href="./08_simultaneous_inference/ranking_exercise.docx">Ranking Exercise</a>: This goes with slide 7 in the <a href="./08_simultaneous_inference/08_simultaneous_inference.pdf">Multiple Comparisons</a> slide deck.</li>
+<li><a href="./08_simultaneous_inference/08_worksheet.pdf">Multiple Comparisons Worksheet</a></li>
+</ul></li>
+<li>Two-way ANOVA
+<ul>
+<li><a href="./09_ch13_two_way_anova/09_two_way_anova_interactions.pdf">Two-way ANOVA with Interactions</a></li>
+<li><a href="./09_ch13_two_way_anova/09_two_way_anova_main_effects.pdf">Additive Two-way ANOVA</a></li>
+<li><a href="./09_ch13_two_way_anova/09_why_other_vars.pdf">Why do we add other variables?</a></li>
+<li><a href="./09_ch13_two_way_anova/09_multifactor_anova.pdf">Generalizing to Multifactorial ANOVA</a></li>
+<li><a href="./09_ch13_two_way_anova/09_worksheet.pdf">Two-way ANOVA Worksheet</a></li>
+</ul></li>
+<li>Simple Linear Regression
+<ul>
+<li><a href="./10_simple_linear_regression/10_simple_linear_regression.pdf">Simple Linear Regression 1</a></li>
+<li><a href="./10_simple_linear_regression/10_linear_regression_extras.pdf">Simple Linear Regression 2</a></li>
+<li><a href="./10_simple_linear_regression/10_worksheet.pdf">Simple Linear Regression Worksheet</a></li>
+</ul></li>
+<li>Linear Model Assumptions
+<ul>
+<li><a href="./11_linear_model_assumptions/11_linear_model_assumptions.pdf">Linear Model Assumptions</a></li>
+<li><a href="./11_linear_model_assumptions/11_interpreting_log_transformations.pdf">Interpreting Log Transformations</a></li>
+<li><a href="./11_linear_model_assumptions/11_case_study_analysis.pdf">Voltage Analysis (with <span class="math inline">\(F\)</span>-test lack-of-fit)</a></li>
+<li><a href="./11_linear_model_assumptions/11_worksheet.pdf">Linear Model Assumptions Worksheet</a></li>
+</ul></li>
+<li>Multiple Linear Regression
+<ul>
+<li><a href="./12_multiple_regression/12_multiple_regression.pdf">Multiple Linear Regression</a></li>
+<li><a href="./12_multiple_regression/12_multiple_regression_eda.pdf">Multiple Regression EDA</a></li>
+<li><a href="./12_multiple_regression/12_limitless_possibilities.pdf">Creating New Explanatory Variables</a></li>
+<li><a href="./12_multiple_regression/12_worksheet.pdf">Multiple Regression Worksheet</a></li>
+</ul></li>
+<li>Model Comparisons and Evaluation
+<ul>
+<li><a href="./13_model_comparisons/13_general_strategy.pdf">General Strategy for Many Variables</a></li>
+<li><a href="./13_model_comparisons/13_f_test_of_nested_models.pdf"><span class="math inline">\(F\)</span>-test for Nested Models</a></li>
+<li><a href="./13_model_comparisons/13_non_nested_comparisons.pdf">Non-nested Model Comparisons</a></li>
+<li><a href="./14_model_assessment/14_outliers.pdf">Dealing with Outliers</a></li>
+<li><a href="./14_model_assessment/14_worksheet.pdf">Model Selection Worksheet</a></li>
+</ul></li>
+</ol>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

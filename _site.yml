@@ -1,0 +1,17 @@
+name: "Stat614"
+navbar:
+  title: "Teaching Website for Statistical Methods (Stat 614)"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Data"
+      href: data_list.html
+    - text: "License"
+      href: license.html
+  right:
+    - icon: fa-github
+      href: https://github.com/dcgerard/stat614
+output:
+  html_document:
+    theme: cosmo
+

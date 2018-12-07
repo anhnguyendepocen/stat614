@@ -1,0 +1,39 @@
+---
+title: "Chapter 3 Case Studies"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+theme_set(theme_bw())
+knitr::opts_chunk$set(echo = TRUE, fig.height = 3, fig.width = 4, fig.align = "center")
+```
+
+# Case Study 3.1.1: Cloud Seeding to Increase Rainfall
+
+These data were collected in southern Florida between 1968 and 1972 to test a hypothesis that massive injections of silver iodide into cumulus clouds can lead to increased rainfall. 
+
+On each of 52 days that were deemed suitable for cloud seeding, a random mechanism was used to decide whether to seed the target cloud on that day or to leave it unseeded as control. Precipitation was measured as the total rain volume falling from the cloud base following the airplane seeding run, as measured by radar.
+
+```{r}
+library(Sleuth3)
+library(ggplot2)
+data("case0301")
+qplot(x = Treatment, y = Rainfall, data = case0301, geom = "boxplot")
+```
+
+# Case Study 3.1.2 Effects of Agent Orange on Troops in Vietnam
+
+Many Vietnam veterans are concerned that their health may have been affected by exposure to Agent Orange, a herbicide sprayed in South Vietnam between 1962 and 1970. The particularly worrisome component of Agent Orange is a dioxin called TCDD, which in high doses is known to be associated with certain cancers. Studies have shown that high levels of this dioxin can be detected 20 or more years after heavy exposure to Agent Orange. Consequently, as part of a series of studies, researchers from the Centers for Disease Control compared the current (1987) dioxin levels in Vietnam veterans to the dioxin levels in veterans who did not serve in Vietnam.
+
+The 646 Vietnam veterans in the study were a sample of U.S. Army combat personnel who served in Vietnam during 1967 and 1968, in the areas that were most heavily treated with Agent Orange. The 97 non-Vietnam veterans entered the Army between 1965 and 1971 and served only in the United States or Germany. Neither sample was randomly selected.
+
+Blood samples from each veteran were analyzed for the presence of ioxin. Boxplots of the observed levels are shown below.
+
+```{r}
+data("case0302")
+qplot(x = Veteran, y = Dioxin, data = case0302, geom = "boxplot")
+```
+

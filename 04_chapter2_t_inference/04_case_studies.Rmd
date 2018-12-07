@@ -1,0 +1,48 @@
+---
+title: "Chapter 2 Case Studies"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Case Study 2.1.1
+
+Over the course of 30  years, the Grant's research team caught and measured all the birds from more than 20 generations of finches on the Galapagos island of Daphne Major. In one of those years, 1977, a severe drought caused vegetation to wither, and the only remaining food source was a large, tough seed, which the finches ordinarily ignored. Were the birds with larger and stronger beaks for opening these tough seeds more likely to survive that year and did they tend to pass this characteristic to their offspring?
+
+The Grant's measured beak depths (height of the beak at its base) of all 751 Daphne Major finches the year before the drought (1976) and all 89 finches captured the year after the drought (1978). The Figure below shows histograms comparing the 89 post-drought finch bill depths with an equal-sized random sample of the pre-drought bill depths. Is there evidence of a difference between the population distributions of beak depths in 1976 and 1978?
+
+```{r, echo = FALSE}
+library(Sleuth3)
+library(ggplot2)
+data(case0201)
+qplot(x = Depth, facets = Year ~ ., data = case0201, bins = 25) +
+  theme_bw() +
+  ggtitle("Beak depths (mm) of Darwin finches pre- (1976) and post- (1978) drought.")
+```
+
+
+# Case Study 2.1.2
+
+Are any physiological indicators associated with schizophrenia? Early 
+studies, based largely on postmortem analysis, suggest that the
+sizes of certain areas of the brain may be different in persons afflicted with schizophrenia than others. Confounding variables in these studies, however, clouded the issue considerably. In a 1990 article, researchers reported the results of a study that controlled for genetic and socioeconomic differences by examining 15 pairs of monozygotic twins, where one of the twins was schizophrenic and the other was not. The twins were located through an intensive search throughout Canada and the United States.
+
+The researches used magnetic resonance imaging to measure the volumes (in cm$^3$) of several regions and subregions inside the twins' brains. The figure below presents a dotplot based on the reported summary statistics from one subregion, the left hippocampus. What is the magnitude of the difference in volumes of the left hippocampus between unaffected and the affected individuals? Can the observed difference be attributed to chance?
+
+```{r, echo = FALSE, message=FALSE, warning=FALSE}
+data(case0202)
+case0202$Difference <- case0202$Unaffected - case0202$Affected
+qplot(x = Difference, data = case0202, geom = "dotplot", binwidth = 0.05) +
+  theme_bw() +
+  ggtitle("Difference in volumes of left hippocampus in 15 sets of\nmonozygotic twins where one twin is affected by schizophrenia")
+```
+
+
+
+
+
+

@@ -1,0 +1,262 @@
+---
+title: "Multiple Regression EDA"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output:
+  beamer_presentation:
+    slide_level: 2
+    theme: "metropolis"
+urlcolor: "blue"
+---
+
+```{r setup, include=FALSE}
+ggplot2::theme_set(
+  ggplot2::theme_bw()
+  )
+knitr::opts_chunk$set(echo = FALSE,
+                      fig.height = 2.3, 
+                      fig.width = 3.7, 
+                      fig.align = "center")
+```
+
+
+```{r}
+set.seed(1)
+library(ggplot2)
+```
+
+## Learning Objectives
+
+- A strategy for exploratory data analysis for multiple linear regression.
+
+- Chapter 9.
+
+## Brain Size
+
+- What variables are associated with brain weight?
+
+- Collected information on 96 different species.
+
+- We know that body weight is already associated with brain weight, 
+    
+    - So what variables are associated with brain weight **after controlling for body weight**.
+
+- Possible variables: Body weight (kg), gestation period (days), litter size
+
+## Brain Size
+
+```{r, echo = TRUE}
+library(Sleuth3)
+data("case0902")
+head(case0902)
+```
+
+## Scatterplots
+
+- The first step is almost always **making a ton of scatterplots**.
+
+- Plots of the response against each explanatory variable shows us what variables seems to be **marginally** related to the response.
+
+- "Marginally related" = related **un**conditional on other variables.
+
+## Response against each explanatory variable
+
+```{r, echo = TRUE}
+qplot(Body, Brain, data = case0902)
+```
+
+## Response against each explanatory variable
+
+```{r, echo = TRUE}
+qplot(Gestation, Brain, data = case0902)
+```
+
+## Response against each explanatory variable
+
+```{r, echo = TRUE}
+qplot(Litter, Brain, data = case0902)
+```
+
+
+## Response against each explanatory variable
+
+- Curvature and different spreads at each explanatory variable suggest a log transformation of `Brain`.
+
+```{r, echo = TRUE}
+case0902$logBrain <- log(case0902$Brain)
+```
+
+## Response against each explanatoery variable
+
+```{r, echo = TRUE}
+qplot(Body, logBrain, data = case0902)
+```
+
+## Response against each explanatory variable
+
+```{r, echo = TRUE}
+qplot(Gestation, logBrain, data = case0902)
+```
+
+## Response against each explanatory variable
+
+```{r, echo = TRUE}
+qplot(Litter, logBrain, data = case0902)
+```
+
+## Response against each explanatory variable
+
+- Still a lot of curvature, so it looks like logging each variable might help.
+
+```{r}
+case0902$logBody      <- log(case0902$Body)
+case0902$logGestation <- log(case0902$Gestation)
+case0902$logLitter    <- log(case0902$Litter)
+```
+
+## Response against each explanatory variable
+
+```{r, echo = TRUE}
+qplot(logBody, logBrain, data = case0902)
+```
+
+## Response against each explanatory variable
+
+```{r, echo = TRUE}
+qplot(logGestation, logBrain, data = case0902)
+```
+
+## Response against each explanatory variable
+
+```{r, echo = TRUE}
+qplot(logLitter, logBrain, data = case0902)
+```
+
+## Response against each explanatory variable
+
+- There looks like there is a lot of linearity now.
+
+## Explanatory variables against each other
+
+- It is often useful to look at scatterplots between each pair of explanatory variables.
+
+- This tells us if some variables seem to be picking up a lot of the same information 
+
+- E.g. Gestation period might be larger just because body size is larger.
+
+    - If brain is associated with Gestation, it might only be through body.
+    
+## Explanatory variables against each other
+
+```{r, echo = TRUE}
+qplot(logBody, logGestation, data = case0902)
+```
+
+
+## Explanatory variables against each other
+
+```{r, echo = TRUE}
+qplot(logBody, logLitter, data = case0902)
+```
+
+## Explanatory variables against each other
+
+```{r, echo = TRUE}
+qplot(logGestation, logLitter, data = case0902)
+```
+
+## Matrix Plots
+
+- You can show scatterplots between all variables at the same time.
+
+- This is called a matrix plot (or a pairs plot).
+
+## Matrix Plots
+
+```{r, echo = TRUE, message=FALSE}
+library(GGally)
+ggpairs(case0902, columns = 6:9)
+```
+
+
+## Make an initial fit
+
+- We can first fit a very complicated model and check residuals.
+
+- We would be looking for more curvature and outliers.
+\small
+```{r, echo = TRUE}
+lm_comp <- lm(logBrain ~ logBody * logLitter * logGestation,
+              data = case0902)
+res_vec <- resid(lm_comp)
+fit_vec <- fitted(lm_comp)
+```
+
+## Make an initial fit
+
+```{r, echo = TRUE}
+qplot(fit_vec, res_vec) + 
+  geom_hline(yintercept = 0)
+```
+
+\normalsize
+
+## Residual qq-plot
+
+```{r, echo = TRUE}
+qplot(sample = res_vec, geom = "qq") +
+  geom_qq_line()
+```
+
+
+## Coded scatterplot
+
+- If you want to explore the association between three quantitative variables, you can code one of them by **transparency** (more preferrable) or **size** (less preferrable)
+
+## Coded scatterplot
+
+```{r, echo = TRUE}
+qplot(logBody, logBrain, alpha = logGestation,
+      data = case0902)
+```
+
+## Coded Scatterplots
+
+```{r, echo = TRUE}
+qplot(logBody, logBrain, size = logGestation,
+      data = case0902)
+```
+
+## Coded Scatterplots
+
+- If you have categorical explanatory variables, you can code their levels by **colors** (more preferrable) and **shapes** (less preferrable) and include this on a scatterplot of two quantitative variables
+
+## Coded Scatterplots
+
+```{r, echo = TRUE}
+data("case0901")
+case0901$Time <- as.factor(case0901$Time)
+qplot(Intensity, Flowers, color = Time,
+      data = case0901)
+```
+
+## Coded Scatterplots
+
+```{r, echo = TRUE}
+qplot(Intensity, Flowers, shape = Time,
+      data = case0901)
+```
+
+## Coded Scatterplots
+
+- It's polite to use colorblind safe color palattes
+
+```{r, echo = TRUE}
+library(ggthemes)
+qplot(Intensity, Flowers, color = Time,
+      data = case0901) +
+  scale_color_colorblind()
+```
+
+
+

@@ -1,0 +1,163 @@
+---
+title: "02 Randomization Distribution"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output:
+  beamer_presentation:
+    theme: "metropolis"
+    slide_level: 2
+urlcolor: "blue"
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+theme_set(theme_bw())
+knitr::opts_chunk$set(echo = TRUE, 
+                      fig.height = 2.3, 
+                      fig.width = 3, 
+                      fig.align = "center")
+```
+
+## Learning Objectives
+
+- Understand quantifying uncertainty using the randomization distribution.
+- Section 1.3 in *Statistical Sleuth*.
+
+## Case Study 1.1.1
+```{r}
+library(Sleuth3)
+data("case0101")
+head(case0101)
+```
+
+## EDA
+
+```{r}
+library(ggplot2)
+qplot(x = Treatment, y = Score, 
+      data = case0101, geom = "boxplot")
+```
+
+## EDA
+```{r}
+ext_scores <- case0101$Score[case0101$Treatment == "Extrinsic"]
+int_scores <- case0101$Score[case0101$Treatment == "Intrinsic"]
+ext_mean <- mean(ext_scores)
+int_mean <- mean(int_scores)
+int_mean
+ext_mean
+int_mean - ext_mean
+```
+
+## Question
+Is 4.144 a big difference? A small difference?
+
+Two possibilities
+
+1. $H_A$: There is actually a difference in creativity scores between the two groups.
+2. $H_0$: There is no difference, and 4.144 happened because, by *chance*, the intrinsic group happened to have more creative people in it.
+
+We can explore how likely a value of 4.144 is if there were no difference.
+
+## Hypothesize
+- Let's suppose that there is no difference ($H_0$) and that the people were going to get the same creativity score no matter which treatment they received.
+- Would we expect the difference between groups to be exactly 0? \pause (hint: NO!)
+- Under $H_0$, each person has the same creativity score no matter what treatment.
+- Differences in average creativity between repeated samples is just due to randomly assigning each person to each group.
+- We can simulate this random mechanism.
+
+## The idea of resampling is to
+- use only the observed data
+- resample (sample from the sample)
+- with or without replacement
+- I create different realizations of possible experimental results
+(if the null hypothesis were actually true).
+\pause
+- I compare many, many resampled experimental results with
+the observed experimental results I decide if observed result is
+common or rare to occur by chance.
+- If observed data are rare compared to resampled results: the
+data may point to something interesting (an effect)
+- If observed data are common within resampled results: maybe
+result just occurred by chance (no evidence of an effect)
+
+## Another Sample
+```{r}
+new_assignment <- sample(case0101$Treatment)
+new_assignment
+```
+
+## EDA of new sample
+```{r}
+qplot(new_assignment, case0101$Score, geom = "boxplot")
+```
+
+## Another Sample
+```{r}
+new_assignment <- sample(case0101$Treatment)
+new_assignment
+```
+
+## EDA of new sample
+```{r}
+qplot(new_assignment, case0101$Score, geom = "boxplot")
+```
+
+## Many Samples {.allowframebreaks}
+```{r}
+set.seed(1)
+itermax <- 5000
+diffvec <- rep(NA, length = itermax)
+for (index in seq_len(itermax)) {
+  new_assignment <- sample(case0101$Treatment)
+  diffvec[index] <- 
+    mean(case0101$Score[new_assignment == "Intrinsic"]) -
+    mean(case0101$Score[new_assignment == "Extrinsic"])  
+}
+```
+
+```{r, echo=FALSE, warning=FALSE, fig.width=4}
+qplot(diffvec[1], geom = "histogram", bins = 30, xlab = "Difference in Averages Between Groups", ylab = "Count") + ylim(0, 60) + xlim(-6, 5)
+
+qplot(diffvec[1:2], geom = "histogram", bins = 30, xlab = "Difference in Averages Between Groups", ylab = "Count") + ylim(0, 60) + xlim(-6, 5)
+
+qplot(diffvec[1:3], geom = "histogram", bins = 30, xlab = "Difference in Averages Between Groups", ylab = "Count") + ylim(0, 60) + xlim(-6, 5)
+
+qplot(diffvec[1:4], geom = "histogram", bins = 30, xlab = "Difference in Averages Between Groups", ylab = "Count") + ylim(0, 60) + xlim(-6, 5)
+
+qplot(diffvec[1:5], geom = "histogram", bins = 30, xlab = "Difference in Averages Between Groups", ylab = "Count") + ylim(0, 60) + xlim(-6, 5)
+
+qplot(diffvec[1:10], geom = "histogram", bins = 30, xlab = "Difference in Averages Between Groups", ylab = "Count") + ylim(0, 60) + xlim(-6, 5)
+
+qplot(diffvec[1:100], geom = "histogram", bins = 30, xlab = "Difference in Averages Between Groups", ylab = "Count") + ylim(0, 60) + xlim(-6, 5)
+
+qplot(diffvec[1:500], geom = "histogram", bins = 30, xlab = "Difference in Averages Between Groups", ylab = "Count") + ylim(0, 60) + xlim(-6, 5)
+
+qplot(diffvec, geom = "histogram", bins = 30, xlab = "Difference in Averages Between Groups", ylab = "Count")
+```
+
+## Compare to our Observed Difference
+```{r, echo=FALSE, fig.width=4}
+qplot(diffvec, geom = "histogram", bins = 30, xlab = "Difference in Averages Between Groups", ylab = "Count") +
+  geom_vline(xintercept = int_mean - ext_mean, lty = 2, col = 2, lwd = 1)
+```
+
+## One sided hypothesis
+What proportion of random assignments have a score greater than or equal to the observed score?
+```{r}
+mean(diffvec > int_mean - ext_mean)
+```
+
+## Compare to magnitude of difference
+```{r, echo=FALSE, fig.width=4}
+qplot(diffvec, geom = "histogram", bins = 30, xlab = "Difference in Averages Between Groups", ylab = "Count") +
+  geom_vline(xintercept = int_mean - ext_mean, lty = 2, col = 2, lwd = 1) +
+  geom_vline(xintercept = -int_mean + ext_mean, lty = 2, col = 2, lwd = 1)
+```
+
+## Two sided p-value
+What proportion of random assignments have a score as favorable or more favorable to the alternative than our observed score?
+```{r}
+mean(abs(diffvec) > int_mean - ext_mean)
+```
+

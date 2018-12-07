@@ -1,0 +1,125 @@
+---
+title: "Multiple Regression Worksheet"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output: pdf_document
+urlcolor: "blue"
+bibliography: "../bib/614_bib.bib"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, fig.height = 3, fig.width = 4, fig.align = "center")
+```
+
+
+# Kentucky Derby
+
+The Kentucky Derby is an annual horse race held every year at Churchill Downs. The data frame `ex0920` contains information on the winners for every year from 1896 to 2011. Researchers are interested in what variables are associated with the winning average speed. Variables include
+
+- `Year`: year of Kentucky Derby.
+- `Winner`: a character vector with the name of the winning horse.
+- `Starters`: number of horses that started the race.
+- `NetToWinner`: the net winnings of the winner, in U.S. dollars.
+- `Time`: the winning time in seconds.
+- `Speed`: the winning average speed, in miles per hour.
+- `Track`: a factor indicating track condition with levels "Fast", "Good", "Dusty", "Slow", "Heavy", "Muddy", and "Sloppy".
+- `Conditions`: a factor with with 2 levels of track condition, with levels "Fast" and "Slow".
+
+You can load these data into R using:
+```{r, echo = TRUE}
+library(Sleuth3)
+data("ex0920")
+head(ex0920)
+```
+
+1. What variable is the response? What are the explanatory variables? What variables are quantitative? What variables are categorical? What are the observational units?
+
+```{block}
+- The observational units are the years.
+- `Speed` is the quantitative response.
+- The categorical explanatory variables are: `Track` and `Conditions`
+- The quantitative explanatory variables are: `Year` and `Starters`.
+- `Winner` is label, so we don't really care about that. `Time` is deterministically related to `Speed`, so we don't care about that. `NetToWinner` seems like it could be another quantitative response, but it wouldn't make sense to have it as another explanatory variable.
+```
+
+2. Use the `ggpairs()` function in the `GGally` library to make a matrix plot of all the quantitative variables. Comment on any trends you notice.
+
+```{r, message=FALSE}
+library(GGally)
+ggpairs(ex0920, columns = c(1, 3, 6))
+```
+
+```{block}
+It looks like there might be a quadratic relationship of `Year` and `Speed` along with `Speed` and `Starters`. So the speed increases with an increasing number of horses, but then starts declining when we get too many horses.
+
+For year, it is possible that using log-year would help, since there isn't too much non-monotonicity at the end. But it also might be that a quadratic term would help.
+```
+
+```{r}
+ex0920$logYear <- log(ex0920$Year)
+ex0920$Starters2 <- ex0920$Starters ^ 2
+ggpairs(ex0920, columns = c(3, 6, 9))
+```
+
+3. Make some color coded scatterplots using `Conditions`. Comment on what you notice.
+
+```{r}
+qplot(Starters, Speed, color = Conditions, data = ex0920)
+qplot(Year, Speed, color = Conditions, data = ex0920)
+```
+
+```{block}
+Slow tracks seem to have a slower average speed and this effect appears to be constant for each year and each number of starters.
+```
+
+
+
+
+4. We'll model the effect of `Starters`, `Year`, and `Conditions` on `Speed`. Using just these four variables, fit a linear model based on your exploratory analysis from parts 2 and 3. Check the assumptions using residual plots. Adjust the model if needed. Iterate until you come up with a final model 
+
+```{r}
+lmout <- lm(Speed ~ logYear + Starters + Starters2 + Conditions,
+            data = ex0920)
+res_vec <- resid(lmout)
+fit_vec <- fitted(lmout)
+qplot(fit_vec, res_vec) +
+  geom_hline(yintercept = 0)
+
+## Seems to be some curvature, so maybe a quadratic 
+## term of year would be better than a log-transformation
+
+ex0920$Year2 <- ex0920$Year ^ 2
+lmout <- lm(Speed ~ Year + Year2 + Starters + Starters2 + Conditions, 
+            data = ex0920)
+res_vec <- resid(lmout)
+fit_vec <- fitted(lmout)
+qplot(fit_vec, res_vec) +
+  geom_hline(yintercept = 0)
+
+## Yes, two quadratic terms seem to work a little better.
+## If the goal is interpretability, I would probably
+## go for the log transformation. If the goal is 
+## just seeing if an association exists, then I would
+## go for a quadratic term.
+```
+
+5. Look at the regression summaries. What appears to be the effect of track condition on speed? Provide 95% confidence intervals in your statement.
+
+
+```{r}
+coef(lmout)
+confint(lmout)
+```
+
+```{block}
+Tracks in poor condition tend to have an average winning speed 0.97 mph slower than tracks in good condition after adjusting for the year of the race and the number of starters (95% CI of 0.78 mph to 1.16 mph slower).
+```
+
+
+
+
+
+
+
+
+

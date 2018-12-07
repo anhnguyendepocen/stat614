@@ -1,0 +1,161 @@
+---
+title: "Chapter 13 Worksheet"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output: pdf_document
+urlcolor: "blue"
+bibliography: "../bib/614_bib.bib"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, fig.height = 3, fig.width = 4, fig.align = "center")
+```
+
+
+# Quality Espresso
+
+In @masella2015new, the authors developed a new method of brewing espresso. Traditional methods use the steam from hot water to create enough pressure to move through the coffee grounds. In this new method, the flow of water is created by pressure differentials between the interior and exterior of the chamber which houses the coffee grounds. This new method allows for finer control of both pressure and temperature. The authors wished to understand the effects of pressure and temperature on foam index. The variables are:
+
+\begin{center}
+\begin{tabular}{l|l}
+Variable & Code \\
+\hline
+\texttt{foamIndx} &  The ratio between the foam and liquid
+volume (expressed as a percent) measured 30s after extraction\\
+\texttt{trt\_id} & A label for each treatment group\\
+\texttt{tempC} & The temperature of the water in Celsius (75, 85, and 90)\\
+\texttt{prssBar} & The pressure in bars (15 and 20)\\
+\end{tabular}
+\end{center}
+
+You can load these data into R using (you might need to change the path):
+```{r, echo = TRUE}
+load("../data/espresso2.rdata")
+head(espresso)
+```
+
+1. Informally explore the effects of pressure and temperature on the foam index by creating an interaction plot. Does pressure look like it increases or decreases the foam index? Does temperature seem like it increases or decreases the foam index? Does the interaction plot make you think that there are strong interactions?
+
+```{r}
+library(ggplot2)
+qplot(tempC, foamIndx, color = prssBar, group = prssBar, 
+      data = espresso, geom = "blank") +
+  stat_summary(fun.y = mean, geom = "line")
+```
+```{block}
+With point-wise 95% confidence intervals:
+```
+```{r, message=FALSE}
+library(tidyverse)
+espresso %>%
+  group_by(tempC, prssBar) %>%
+  summarize(mean = mean(foamIndx),
+            se   = sd(foamIndx) / sqrt(n())) %>%
+  ungroup() %>%
+  mutate(lower = mean - 2 * se,
+         upper = mean + 2 * se) %>%
+  ggplot(mapping = aes(x = tempC, y = mean, color = prssBar, group = prssBar)) +
+  geom_line() +
+  geom_errorbar(mapping = aes(ymin = lower, ymax = upper), width = 0.2) +
+  theme_bw()
+```
+
+
+
+```{block}
+It looks like temperature decreases and foam pressure increases the foam index. Though, there might be an interaction effect in that the foam index seems to level off at higher temperatures for higher pressures, but not for lower pressures.
+```
+
+2. Fit the cell means model and evaluate if the assumptions of the ANOVA model seem appropriate.
+
+```{r}
+## The assumptions look pretty great.
+aout_cell <- aov(foamIndx ~ prssBar * tempC, data = espresso)
+resid_vec <- resid(aout_cell)
+fit_vec <- fitted(aout_cell)
+qplot(fit_vec, resid_vec, geom = "point") +
+  geom_hline(yintercept = 0, lty = 2)
+```
+
+
+3. Write out the two-way ANOVA model with interactions.
+```{block}
+- $Y_{ijk} = \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij} + \epsilon_{ijk}$
+- $Y_{ijk}$: foam index of $k$th individual in pressure $i$ and temperature $j$
+- $\mu$: Baseline mean.
+- $\alpha_i$: Main effects for pressure $i$
+- $\beta_j$: Main effects for temperature $j$
+- $(\alpha\beta)_{ij}$: Interaction effects for pressure $i$ and temperature $j$
+- $\epsilon_{ijk}$: Noise
+```
+
+
+4. Write out the hypotheses in terms of the parameters to test if there is an interaction.
+
+```{block}
+- $H_0: (\alpha\beta)_{ij} = 0$ for all $i$ and all $j$
+- $H_A:$ At least one $(\alpha\beta)_{ij} \neq 0$
+```
+
+
+5. Formally test if there is an interaction.
+
+```{r}
+anova(aout_cell)
+```
+
+```{block}
+The large $p$-value (0.48) does not provide evidence of an interaction between pressure and temperature.
+```
+
+6. Now fit the additive model. Is there a significant effect of pressure or temperature on the foam index.
+
+```{r}
+aout_add <- aov(foamIndx ~ prssBar + tempC, data = espresso)
+anova(aout_add)
+```
+
+```{block}
+Yes, both pressure and temperature significantly effect the foam index ($p$-values of 0.0035 and 0.0066 respectively).
+```
+
+7. Extract the coefficients and interpret all of them.
+
+```{r}
+coef(aout_add)
+confint(aout_add)
+
+contrasts(espresso$tempC) <- contr.treatment(nlevels(espresso$tempC), base = 2)
+aout_add2 <- aov(foamIndx ~ prssBar + tempC, data = espresso)
+confint(aout_add2)
+```
+
+```{block}
+- It is estimated that increasing the temperature from 15 bar to 20 bar will result in an increase in 19.8% in the foam index (95% CI of 9.5% to 30.2% increase).
+- It is estimated that increasing the temperature from 75C to 85C results in a decrease of 16.10% on the foam index (95% CI of 3.4% to 28.8% decrease). A further increase to 95C results in a further decrease of 3.65% (95% CI of 9.0% increase to 16.5% decrease).
+```
+
+
+8. Now run three different two sample $t$-tests for differences in pressure at each temperature (75C, 85C, and 95C). Do we get any significant results?
+
+```{r}
+is75 <- espresso$tempC == 75
+is85 <- espresso$tempC == 85
+is95 <- espresso$tempC == 95
+
+dat75 <- espresso[is75, ]
+dat85 <- espresso[is85, ]
+dat95 <- espresso[is95, ]
+
+## Only get a major significant difference at 95C
+t.test(foamIndx ~ prssBar, data = dat75)
+t.test(foamIndx ~ prssBar, data = dat85)
+t.test(foamIndx ~ prssBar, data = dat95)
+```
+
+
+# References
+
+
+
+

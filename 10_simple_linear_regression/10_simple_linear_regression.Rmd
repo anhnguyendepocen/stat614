@@ -1,0 +1,568 @@
+---
+title: "Simple Linear Regression"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output:
+  beamer_presentation:
+    theme: "metropolis"
+    slide_level: 2
+urlcolor: "blue"
+---
+
+```{r setup, include=FALSE}
+ggplot2::theme_set(
+  ggplot2::theme_bw()
+  )
+knitr::opts_chunk$set(echo = FALSE,
+                      fig.height = 2.5, 
+                      fig.width = 4, 
+                      fig.align = "center")
+```
+
+## Objectives
+
+- Intuitively understand simple linear regression.
+- Ch 7 in the book.
+
+## Case Study
+
+- The theory of Big Bang suggests a formal relationship between the distance between any two celestial objects ($Y$) and the recession velocity ($X$) between them (how fast they are moving apart) given the (unknown) age of the universe ($T$):
+$$
+Y = TX
+$$
+
+- Distance vs velocity measurements of multiple nebulae
+
+```{r, echo = TRUE}
+library(Sleuth3)
+data("case0701")
+```
+
+## Scatterplot
+```{r, echo = TRUE}
+library(ggplot2)
+qplot(Velocity, Distance, data = case0701, geom = "point")
+```
+
+## Questions of Interest
+
+- The formula describes a line with zero intercept. Is the intercept zero?
+
+- What is the age of the universe (estimate $T$)?
+
+## Review: Lines
+
+- Every line may be represented by a formula of the form
+$$
+Y = \beta_0 + \beta_1 X
+$$
+- $Y$ = response variable on $y$-axis
+- $X$ = explanatory variable on the $x$-axis
+- $\beta_1$ = slope (rise over run)
+    - How much larger is $Y$ when $X$ is increased by 1.
+- $\beta_0$ = $y$-intercept (the value of the line at $X = 0$)
+
+## Review Lines
+
+\begin{center}
+\includegraphics{./line_review}
+\end{center}
+
+```{r, echo = FALSE, eval = FALSE}
+# qplot(1, 1, geom = "blank") + 
+# geom_abline(slope = 1, intercept = 4, col = "blue", lwd = 2, alpha = 1/2) +
+#   scale_x_continuous(breaks = 0:5) +
+#   scale_y_continuous(breaks = 0:10) +
+#   xlim(0, 5) +
+#   ylim(0, 10) +
+#   theme(axis.title = element_blank()) ->
+#   pl
+# pdf(file = "./line_review.pdf", family = "Times", height = 3, width = 4)
+# print(pl)
+# dev.off()
+```
+
+## A line doesn't exactly fit
+
+```{r}
+qplot(Velocity, Distance, data = case0701, geom = "point")
+```
+
+## A line plus noise
+
+- The linear regression model
+$$
+Y_i = \beta_0 + \beta_1 X_i + \epsilon_i
+$$
+\pause
+- $Y_i$: distance from earth of nebula $i$\pause
+- $X_i$: recession velocity of nebula $i$\pause
+- $\beta_0$: The intercept of the mean line ("regression line")
+    - Mean when $X_i = 0$\pause
+- $\beta_1$: Slope of the regression line.
+    - Difference in mean distance between two nebula when they differ by only 1 velocity unit.\pause
+- $\beta_0 + \beta_1 X_i$: the mean distance at velocity $X_i$\pause
+- $\epsilon_i$: Individual noise with mean 0 and variance $\sigma^2$. Ideally normally distributed.
+
+
+```{r, echo = FALSE, eval = FALSE}
+# ## Make noise graphic
+# qplot(1, 1, geom = "blank") + 
+# geom_abline(slope = 1, intercept = 4, col = "blue", lwd = 2, alpha = 1/2) +
+#   scale_x_continuous(breaks = 0:5) +
+#   scale_y_continuous(breaks = 0:10) +
+#   xlim(0, 5) +
+#   ylim(0, 10) +
+#   theme(axis.title = element_blank()) ->
+#   pl
+# 
+# pdf(file = "line.pdf", family = "Times", height = 3, width = 4)
+# print(pl)
+# dev.off()
+# 
+# pl <- qplot(seq(-3, 3, length = 100), dnorm(seq(-3, 3, length = 100)), geom = "line", color = I("black"), lwd = I(2)) +
+#   theme(axis.line=element_blank(),axis.text.x=element_blank(),
+#           axis.text.y=element_blank(),axis.ticks=element_blank(),
+#           axis.title.x=element_blank(),
+#           axis.title.y=element_blank(),legend.position="none",
+#           panel.background=element_blank(),panel.border=element_blank(),panel.grid.major=element_blank(),
+#           panel.grid.minor=element_blank(),plot.background=element_blank())
+# 
+# pdf("normal_curve.pdf", family = "Times", height = 1, width = 2)
+# print(pl)
+# dev.off()
+```
+
+## Some intuition
+
+- The distribution of $Y$ is *conditional* on the value of $X$.
+
+- The distribution of $Y$ is assumed to have the **same variance**, $\sigma^2$ for **all possible values of $X$**.
+
+- This last one is a considerable assumption.
+
+## Conditional Distributions
+
+\begin{center}
+\includegraphics{./reg1}
+\end{center}
+
+## Conditional Distributions
+
+\begin{center}
+\includegraphics{./reg2}
+\end{center}
+
+## Conditional Distributions
+
+\begin{center}
+\includegraphics{./reg3}
+\end{center}
+
+## Conditional Distributions
+
+\begin{center}
+\includegraphics{./reg4}
+\end{center}
+
+## Conditional Distributions
+
+\begin{center}
+\includegraphics{./reg5}
+\end{center}
+
+## How do we estimate $\beta_0$ and $\beta_1$?
+
+- $\beta_0$ and $\beta_1$ are **parameters**
+
+- We want to estimate them from our **sample**\pause
+
+- Idea: Draw a line through the cloud of points and calculate the slope and intercept of that line?
+
+- Problem: Subjective\pause
+
+- Another idea: Minimize residuals (sum of squared residuals).
+
+## Ordinary Least Squares
+
+- Residuals: $\hat{\epsilon}_i = Y_{i} - (\hat{\beta}_0 + \hat{\beta}_1X_i)$
+
+- Sum of squared residuals: $\hat{\epsilon}_1^2 + \hat{\epsilon}_2^2 + \cdots + \hat{\epsilon}_n^2$
+
+- Find $\hat{\beta}_0$ and $\hat{\beta}_1$ that have small sum of squared residuals.
+
+- The obtained estimates, $\hat{\beta}_0$ and $\hat{\beta}_1$, are called the **ordinary least squares** (OLS) estimates.
+
+## Bad Fit
+
+```{r, message=FALSE}
+library(tidyverse)
+
+beta0 <- 1.2
+beta1 <- 1 / 1310
+case0701$fitted <- beta0 + case0701$Velocity * beta1
+case0701 %>%
+  ggplot(mapping = aes(x = Velocity, y = Distance)) +
+  geom_point() +
+  geom_abline(slope = beta1, intercept = beta0, color = "blue", alpha = 1/2) +
+  ggtitle("Bad Fit")
+```
+
+## Bad Fit
+
+```{r, message=FALSE}
+beta0 <- 1.2
+beta1 <- 1 / 1310
+case0701$fitted <- beta0 + case0701$Velocity * beta1
+ss <- sum((case0701$fitted - case0701$Distance)^2)
+case0701 %>%
+  ggplot(mapping = aes(x = Velocity, y = Distance)) +
+  geom_point() +
+  geom_abline(slope = beta1, intercept = beta0, color = "blue", alpha = 1/2) +
+  geom_segment(mapping = aes(x = Velocity, xend = Velocity, y = Distance, yend = fitted), alpha = 1/2) +
+  ggtitle(paste0("Sum of Squares: ", round(ss, digits = 2)))
+```
+
+
+## Better Fit
+
+```{r, message=FALSE}
+beta0 <- 0.7
+beta1 <- 1 / 1000
+case0701$fitted <- beta0 + case0701$Velocity * beta1
+case0701 %>%
+  ggplot(mapping = aes(x = Velocity, y = Distance)) +
+  geom_point() +
+  geom_abline(slope = beta1, intercept = beta0, color = "blue", alpha = 1/2) +
+  ggtitle("Better Fit")
+```
+
+## Better Fit
+
+```{r, message=FALSE}
+beta0 <- 0.7
+beta1 <- 1 / 1000
+case0701$fitted <- beta0 + case0701$Velocity * beta1
+ss <- sum((case0701$fitted - case0701$Distance)^2)
+case0701 %>%
+  ggplot(mapping = aes(x = Velocity, y = Distance)) +
+  geom_point() +
+  geom_abline(slope = beta1, intercept = beta0, color = "blue", alpha = 1/2) +
+  geom_segment(mapping = aes(x = Velocity, xend = Velocity, y = Distance, yend = fitted), alpha = 1/2) +
+  ggtitle(paste0("Sum of Squares: ", round(ss, digits = 2)))
+```
+
+
+## Best Fit (OLS Fit)
+
+```{r, message=FALSE}
+lmout <- lm(Distance ~ Velocity, data = case0701)
+beta0 <- coef(lmout)[1]
+beta1 <- coef(lmout)[2]
+case0701$fitted <- beta0 + case0701$Velocity * beta1
+case0701 %>%
+  ggplot(mapping = aes(x = Velocity, y = Distance)) +
+  geom_point() +
+  geom_abline(slope = beta1, intercept = beta0, color = "blue", alpha = 1/2) +
+  ggtitle("Best Fit")
+```
+
+## Best Fit (OLS Fit)
+
+```{r, message=FALSE}
+beta0 <- coef(lmout)[1]
+beta1 <- coef(lmout)[2]
+case0701$fitted <- beta0 + case0701$Velocity * beta1
+ss <- sum((case0701$fitted - case0701$Distance)^2)
+case0701 %>%
+  ggplot(mapping = aes(x = Velocity, y = Distance)) +
+  geom_point() +
+  geom_abline(slope = beta1, intercept = beta0, color = "blue", alpha = 1/2) +
+  geom_segment(mapping = aes(x = Velocity, xend = Velocity, y = Distance, yend = fitted), alpha = 1/2) +
+  ggtitle(paste0("Sum of Squares: ", round(ss, digits = 2)))
+```
+
+## Closed Form Solutions
+
+- You can use calculus to prove that the OLS fits are
+
+- $\hat{\beta}_1 = \frac{s_y}{s_x}\rho$
+
+- $\hat{\beta}_0 = \bar{Y} - \hat{\beta}_1\bar{X}$
+
+where
+
+- $s_y$ = sample standard deviation of the $Y_i$'s
+
+- $s_x$ = sample standard deviation of the $X_i$'s
+
+- $\rho$ = sample correlation between the $X_i$'s and $Y_i$'s.
+
+## Estimate of $\sigma^2$
+
+- Once we have $\hat{\beta}_0$ and $\hat{\beta}_1$, we can estimate the variance $\sigma^2$ using the residuals.
+
+- $\hat{\epsilon}_{i} = Y_i - (\hat{\beta}_0 - \hat{\beta}_1X_i)$\pause
+
+- $\hat{\sigma}^2 = (\hat{\epsilon}_{1}^2 + \hat{\epsilon}_{2}^2 + \cdots + \hat{\epsilon}_{n}^2) / \nu$
+
+- $\hat{\sigma}^2 =$ Sum of squared residuals divided by the degrees of freedom.\pause
+
+- $\nu$ = degrees of freedom = $n - \text{\#parameters}$ = $n - 2$
+
+## In R
+
+- Use the `lm()` function (for **L**inear **M**odel)
+
+- Always save this output.
+
+- `coef()` returns the estimates of the regression "coefficients" ($\beta_0$ and $\beta_1$).
+
+```{r, echo = TRUE}
+lmout <- lm(Distance ~ Velocity, data = case0701)
+coef(lmout)
+```
+
+- `sigma()` returns the estimate of the standard deviation.
+
+```{r}
+sigma(lmout)
+```
+
+
+## Plot regression line
+
+```{r, echo = TRUE}
+qplot(Velocity, Distance, data = case0701, 
+      geom = "point") +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+
+## Sampling Distribution
+
+- $\hat{\beta}_0$ and $\hat{\beta}_1$ both have *sampling distributions*. \pause
+
+- Collect a new sample where **the new sample points have the same values of $X_i$**.\pause
+
+- Recalculate the least squares estimates, $\hat{\beta}_0$ and $\hat{\beta}_1$. \pause
+
+- Repeat
+
+## Sampling Distribution
+
+- Ground Truth
+
+```{r}
+lmcoef <- coef(lmout)
+qplot(Velocity, Distance, data = case0701, 
+      geom = "blank") +
+  geom_abline(slope = lmcoef[2], intercept = lmcoef[1], lty = 1, lwd = 1, col = "blue") +
+  ggtitle(paste0("beta0", ": ", round(lmcoef[1], digits = 2), ", ", "beta1", ": ", round(lmcoef[2], digits = 4))) +
+  ylim(-0.5, 2.5)
+```
+
+## Sampling Distribution
+
+- Our Observed Data
+
+```{r}
+qplot(Velocity, Distance, data = case0701, 
+      geom = "point") +
+  geom_abline(slope = lmcoef[2], intercept = lmcoef[1], lty = 1, lwd = 1, col = "blue") +
+  ggtitle(paste0("beta0", ": ", round(lmcoef[1], digits = 2), ", ", "beta1", ": ", round(lmcoef[2], digits = 4))) +
+  geom_rug(sides = "b") +
+  ylim(-0.5, 2.5)
+```
+
+## Sampling Distribution {.allowframebreaks}
+
+```{r, warning=FALSE}
+set.seed(1)
+
+for(index in 1:10) {
+case0701$newDistance <- lmcoef[1] + lmcoef[2] * case0701$Velocity + 
+  rnorm(n = nrow(case0701), mean = 0, sd = sigma(lmout))
+
+lmout2 <- lm(newDistance ~ Velocity, data = case0701)
+lmcoef2 <- coef(lmout2)
+
+pl <- qplot(Velocity, newDistance, data = case0701, 
+      geom = "point") +
+  geom_abline(slope = lmcoef[2], intercept = lmcoef[1], lty = 1, lwd = 1, col = "blue", alpha = 1/3) +
+  geom_abline(slope = lmcoef2[2], intercept = lmcoef2[1], lty = 2, lwd = 1, col = "red") +
+  ggtitle(paste0("beta0", ": ", round(lmcoef2[1], digits = 2), ", ", "beta1", ": ", round(lmcoef2[2], digits = 4))) +
+  geom_rug(sides = "b") +
+  ylim(-0.5, 2.5)
+print(pl)
+}
+```
+
+## Sampling Distribution of $\hat{\beta}_1$
+
+```{r}
+nrep <- 200
+beta1vec <- rep(NA, length = nrep)
+beta0vec <- rep(NA, length = nrep)
+for(index in seq_len(nrep)) {
+  case0701$newDistance <- lmcoef[1] + lmcoef[2] * case0701$Velocity + 
+    rnorm(n = nrow(case0701), mean = 0, sd = sigma(lmout))
+
+  lmout2 <- lm(newDistance ~ Velocity, data = case0701)
+  lmcoef2 <- coef(lmout2)
+  beta0vec[index] <- lmcoef2[1]
+  beta1vec[index] <- lmcoef2[2]
+}
+qplot(beta1vec, geom = "histogram", bins = 20, xlab = "beta1hat",
+      fill = I("white"), color = I("black"))
+```
+
+## Sampling Distribution of $\hat{\beta}_0$
+
+```{r}
+qplot(beta0vec, geom = "histogram", bins = 20, xlab = "beta1hat",
+      fill = I("white"), color = I("black"))
+```
+
+## Theoretical Sampling Distributions
+
+- A variant of the central limit theorem can be used to show that for large $n$
+
+- $\hat{\beta}_1 \sim N(\beta_1, SD(\hat{\beta}_1))$
+
+- $SD(\hat{\beta}_1) = \sigma \sqrt{\frac{1}{(n-1)s_X^2}}$
+
+- $\hat{\beta}_0 \sim N(\beta_0, SD(\hat{\beta}_0))$
+
+- $SD(\hat{\beta}_0) = \sigma \sqrt{\frac{1}{n} + \frac{\bar{X}^2}{(n-1)s_X^2}}$
+
+- The standard deviation formulas are complex (and not too important for you), but a computer can calculate them easily.
+
+## $t$-ratios
+
+- So we have
+
+- $\frac{\hat{\beta}_1 - \beta_1}{SD(\hat{\beta}_1)} \sim N(0, 1)$
+
+- $\frac{\hat{\beta}_0 - \beta_0}{SD(\hat{\beta}_0)} \sim N(0, 1)$ \pause
+
+- $\frac{\hat{\beta}_1 - \beta_1}{SE(\hat{\beta}_1)} \sim t_{n-2}$
+
+- $\frac{\hat{\beta}_0 - \beta_0}{SE(\hat{\beta}_0)} \sim t_{n-2}$ \pause
+
+- $SE(\hat{\beta}_1) = \hat{\sigma} \sqrt{\frac{1}{(n-1)s_X^2}}$
+
+- $SE(\hat{\beta}_0) = \hat{\sigma} \sqrt{\frac{1}{n} + \frac{\bar{X}^2}{(n-1)s_X^2}}$
+
+## Use $t$-ratios for testing hypotheses
+
+- Under $H_0: \beta_1 = 0$, we have
+
+$$
+\frac{\hat{\beta}_1}{SE(\hat{\beta}_1)} \sim t_{n-2}
+$$
+
+- Compare observed $t$-statistic to theoretical $t_{n-2}$ distribution and calculate $p$-values
+
+```{r, fig.height = 2}
+x <- seq(-4, 4, length = 100)
+y <- dt(x, df = 10)
+which_x <- x > 1.8
+polydf1 <- data.frame(xp = c(min(x[which_x]), x[which_x], max(x[which_x]), min(x[which_x])),
+                      yp = c(0, y[which_x], 0, 0))
+which_x <- x < -1.8
+polydf2 <- data.frame(xp = c(min(x[which_x]), x[which_x], max(x[which_x]), min(x[which_x])),
+                      yp = c(0, y[which_x], 0, 0))
+qplot(x, y, geom = "line") +
+  geom_polygon(data = polydf1, mapping = aes(x = xp, y = yp), fill = "blue", alpha = 1/2) +
+  geom_polygon(data = polydf2, mapping = aes(x = xp, y = yp), fill = "blue", alpha = 1/2)
+```
+
+
+
+## Use $t$-ratios for confidence intervals
+
+- The following is satisfied in 95% of repeated samples (again, where the covariate levels do not change):
+$$
+t_{n-2}(0.025) \leq \frac{\hat{\beta}_1 - \beta_1}{SE(\hat{\beta}_1))} \leq t_{n-2}(0.975)
+$$
+
+- Solve for $\beta_1$ to get a 95% confidence interval
+$$
+\hat{\beta}_1 \pm t_{n-2}(0.975) SE(\hat{\beta}_1)
+$$
+
+
+## Obtaining these in R
+\footnotesize
+```{r, echo = TRUE}
+lmout <- lm(Distance ~ Velocity, data = case0701)
+summary(lmout)
+```
+\normalsize
+
+## Obtaining these in R
+
+
+```{r, echo = TRUE}
+confint(lmout)
+```
+
+## Interpretation of Coefficient Estimates
+
+Randomized Experiments
+
+- A one unit increase in $X$ results in a $\beta_1$ unit increase in $Y$.
+
+- E.g. Every hour after slaughter decreases the pH in the postmortem muscle of a steer carcus by 0.21 pH units ($p < 0.001$, 95% CI -0.25 to -0.16).
+
+- The words and phrases "decreases", "increases", "results in" are causal.
+
+## Interpretation of Coefficient Estimates
+
+Observational Study
+
+- Populations that differ only by one unit of $X$ tend to differ by $\beta_1$ units $Y$.
+
+- E.g. Nebulae that have a receding velocity 1 km/sec faster tend to be 0.0014 megaparsecs further from Earth ($p < 0.001$, 95% CI of 0.00090 0.0018).
+
+- The words "differ" and "difference" are less causal.
+
+# Back to Big Bang
+
+## Case Study
+
+- The theory of Big Bang suggests a formal relationship between the distance between any two celestial objects ($Y$) and the recession velocity ($X$) between them (how fast they are moving apart) given the (unknown) age of the universe ($T$):
+$$
+Y = TX
+$$
+
+## Questions of Interest
+
+- The formula describes a line with zero intercept. Is the intercept zero?
+
+- What is the age of the universe (estimate $T$)?
+
+## Test if $\beta_0$ is 0
+
+```{r, echo = TRUE}
+sumout <- summary(lmout)
+coef(sumout)
+```
+
+- We reject $H_0$ and conclude that the intercept is not 0.
+
+## Estimate Age of Universe
+
+- If the big-bang theory were correct, $\beta_0 = 0$, so we would fit assuming $\beta_0 = 0$ to estimate $\beta_1$ (the age of the universe)
+
+```{r, echo = TRUE}
+lm_noint <- lm(Distance ~ Velocity - 1, data = case0701)
+cbind(coef(lm_noint), confint(lm_noint))
+```
+
+- Estimated age is 0.001921 megaparsec-second per km, with a 95% confidence interval of 0.001526 to 0.002317 megaparsec-second per km.
+
+- Possible to convert these units to years.
+
+

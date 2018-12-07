@@ -1,0 +1,97 @@
+---
+title: "Chapter 2 Worksheet"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output: pdf_document
+urlcolor: "blue"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE)
+```
+
+# Twin Study
+Read case study 2.1.2. Read in the data.
+
+```{r, echo=TRUE}
+library(Sleuth3)
+data("case0202")
+```
+
+1. Create a vector containing the difference in the left-hippocampus in `Affected` and `Unaffected` twins.
+
+```{r}
+diff <- case0202$Unaffected - case0202$Affected
+```
+
+
+2. Use the function `t.test()` to run a one-sample $t$-test against a null hypothesis of a mean difference of 0. You should read about this function with `help(t.test)`.
+
+```{r}
+t.test(diff)
+```
+
+3. Now let's do this $t$-test the hard way. What are the mean and standard deviations of the difference in the left hippocampus between unaffected and affected twins? What is the sample size?
+
+```{r}
+## Mean
+mean(diff)
+
+## Standard Deviation
+sd(diff)
+
+## Sample Size
+length(diff)
+```
+
+4. What is the $t$-statistic? Save it as the variable `tstat`.
+
+```{r}
+tstat <- mean(diff) / (sd(diff) / sqrt(length(diff)))
+tstat
+```
+
+5. What is the degrees of freedom? Save it as a variable `degfr`.
+
+```{r}
+degfr <- length(diff) - 1
+degfr
+```
+
+6. Use the `pt()` function to get the same $p$-value as in part 2.
+
+```{r}
+2 * pt(q = -abs(tstat), df = degfr)
+```
+
+# Beak Study
+
+Read about Case 2.1.1. Read it into R
+
+```{r, echo=TRUE}
+library(Sleuth3)
+data(case0201)
+case0201$Year <- factor(case0201$Year)
+```
+
+1. Make a boxplot of `Year` (x-axis) against `Depth` (y-axis). Do the Depths from the two years look like they might have the same variance?
+
+```{r}
+## Yes
+library(ggplot2)
+qplot(x = Year, y = Depth, data = case0201, geom = "boxplot")
+```
+
+2. Now consider the following output of `t.test()`.
+
+```{r, echo=TRUE}
+t.test(formula = Depth ~ Year, data = case0201, var.equal = TRUE)
+```
+
+Write out a statistical conclusion from the above procedure.
+
+```{block}
+We reject the null hypothesis of same mean beak size in the two years ($p$ < 0.001) and conclude that beak size is different. Estimated difference in means is 0.67 (95% CI of 0.38 to 0.96).
+```
+
+

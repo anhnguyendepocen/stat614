@@ -1,0 +1,241 @@
+---
+title: "Two-way ANOVA Main Effects"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output:
+  beamer_presentation:
+    theme: "metropolis"
+    slide_level: 2
+urlcolor: "blue"
+---
+
+```{r setup, include=FALSE}
+ggplot2::theme_set(
+  ggplot2::theme_bw()
+  )
+knitr::opts_chunk$set(echo = FALSE,
+                      fig.height = 2.5, 
+                      fig.width = 4, 
+                      fig.align = "center")
+```
+
+## Objectives
+
+- Testing for Main Effects
+- Chapter 13 in the book.
+
+## Pygmalion Effect Case Study
+
+- Pygmalion Effect: high expectations of a supervisor translate into improved performance of subordinate.
+- A company of soldiers contains three platoons each.
+- Within each company, one platoon was randomly selected to be the "Pygmalion platoon."
+- The platoon leader in the Pygmalion platoon was told by the army psychologist that his platoon was predicted to be superior.
+- At end of basic training, all soldiers in each platoon were given a skill test.
+- Data consist of average scores for each platoon.
+
+## The data
+```{r, echo = TRUE}
+library(Sleuth3)
+data("case1302")
+head(case1302)
+```
+
+## Two-way ANOVA model: The additive model
+
+- Model: $Y_{ijk} = \mu + \alpha_i + \beta_j + \epsilon_{ijk}$ \bigskip
+- $Y_{ijk}$: Value of observational unit $j$ of group $i$ of the first categorical variable and group $j$ of the second categorical variable. \bigskip\pause
+- $\mu$: baseline value.\bigskip
+- $\alpha_i$: Additive effect of being in group $i$ in categorical variable 1.\bigskip
+- $\beta_j$: Additive effect of being in group $j$ in categorical variable 2.\bigskip\pause
+- $\epsilon_{ijk}$: Individual-specific noise for observational unit $k$ of group $i$ of the first categorical variable and group $j$ of the second categorical variable. Assumed to have mean 0 and variance $\sigma^2$.
+- $\sigma^2$ is assumed to be the **same** for all observational units of all groups
+
+## Main Effects
+
+- The $\alpha_i$'s are called the "main effects" for company (as opposed to interaction effects). 
+
+- The $\beta_j$'s are called the "main effects" for treatment.
+
+- We are not directly interested in the $\alpha_i$'s. The reasearchers just thought that there would be a lot of variability between companies and so wanted to control for this.
+
+- We want to know if the treatment is effective.
+
+- $H_0: \beta_i = 0$ for all $i$.
+
+- $H_A: \beta_i \neq 0$ for some $i$.
+
+## Our Specific Case
+
+- $J = 2$ since there are two groups (Pygmalion and Control)
+
+- $\beta_1 = 0$ by assumption.
+
+- $\beta_2$ is the treatment effect.
+
+- $H_0: \beta_2 = 0$
+
+- $H_A: \beta_2 \neq 0$
+
+## Reduced (Company Only) Model
+
+- Mean estimates
+
+```{r}
+suppressMessages(library(tidyverse))
+library(ggthemes)
+aout_com <- aov(Score ~ Company, data = case1302)
+
+case1302$est_com <- aout_com$fitted.values
+case1302$lower <- as.numeric(case1302$Company) - 0.2
+case1302$upper <- as.numeric(case1302$Company) + 0.2
+
+ggplot(data = case1302, mapping = aes(x = Company, y = Score, color = Treat)) +
+  geom_point() +
+  ggthemes::scale_color_colorblind() +
+  geom_segment(mapping = aes(x = lower, xend = upper, y = est_com, yend = est_com), color = "blue")
+```
+
+## Reduced (Company Only) Model
+
+- Find the Residuals
+
+```{r}
+ggplot(data = case1302, mapping = aes(x = Company, y = Score, color = Treat)) +
+  geom_point() +
+  ggthemes::scale_color_colorblind() +
+  geom_segment(mapping = aes(x = lower, xend = upper, y = est_com, yend = est_com)) +
+  geom_segment(aes(x = Company, xend = Company, y = Score, yend = est_com), col = "blue", lty = 1, alpha = 1/2, lwd = 1)
+```
+
+## Reduced (Company Only) Model
+
+- Find the Residuals (jittered for easier viewing)
+
+```{r}
+case1302$com_jit <- jitter(as.numeric(case1302$Company))
+ggplot(data = case1302, mapping = aes(x = com_jit, y = Score, color = Treat)) +
+  geom_point() +
+  ggthemes::scale_color_colorblind() +
+  geom_segment(mapping = aes(x = lower, xend = upper, y = est_com, yend = est_com)) +
+  geom_segment(aes(x = com_jit, xend = com_jit, y = Score, yend = est_com), col = "blue", lty = 1, alpha = 1/2, lwd = 1) +
+  xlab("Company") +
+  scale_x_continuous(breaks = 1:10, labels = levels(case1302$Company))
+```
+
+
+## Full (Additive) Model
+
+- Mean Estimates
+
+```{r}
+aout_add <- aov(Score ~ Company + Treat, data = case1302)
+
+case1302$est_add <- aout_add$fitted.values
+
+ggplot(data = case1302, mapping = aes(x = Company, y = Score, color = Treat)) +
+  geom_point() +
+  ggthemes::scale_color_colorblind() +
+  geom_segment(mapping = aes(x = lower, xend = upper, y = est_add, yend = est_add))
+```
+
+
+## Full (Additive) Model
+
+- Find the Residuals
+
+```{r}
+ggplot(data = case1302, mapping = aes(x = Company, y = Score, color = Treat)) +
+  geom_point() +
+  ggthemes::scale_color_colorblind() +
+  geom_segment(mapping = aes(x = lower, xend = upper, y = est_add, yend = est_add)) +
+  geom_segment(aes(x = Company, xend = Company, y = Score, yend = est_add), col = "blue", lty = 1, alpha = 1/2, lwd = 1)
+```
+
+## Full (Additive) Model
+
+- Find the Residuals (jittered for easier viewing)
+
+```{r}
+ggplot(data = case1302, mapping = aes(x = com_jit, y = Score, color = Treat)) +
+  geom_point() +
+  ggthemes::scale_color_colorblind() +
+  geom_segment(mapping = aes(x = lower, xend = upper, y = est_add, yend = est_add)) +
+  geom_segment(aes(x = com_jit, xend = com_jit, y = Score, yend = est_add), col = "blue", lty = 1, alpha = 1/2, lwd = 1) +
+  xlab("Company") +
+  scale_x_continuous(breaks = 1:10, labels = levels(case1302$Company))
+```
+
+## Sum of Squared Residuals
+
+```{r}
+n <- nrow(case1302)
+Ival <- nlevels(case1302$Company)
+Jval <- nlevels(case1302$Treat)
+rss_full <- sum(aout_add$residuals^2)
+df_full <- n - Ival - Jval + 1
+rss_reduced <- sum(aout_com$residuals^2)
+df_reduced <- n - Ival
+ess <- rss_reduced - rss_full
+df_extra <- df_reduced - df_full
+fstat <- (ess / df_extra) / (rss_full / df_full)
+```
+
+- $RSS_{full}$ = `r rss_full`
+
+- $df_{full}$ = $n - I - J + 1$ = `r n` - `r Ival` -`r Jval` + 1 = `r df_full` \pause
+
+- $RSS_{reduced}$ = `r rss_reduced`
+
+- $df_{reduced}$ = $n - I$ = `r n` - `r Ival` = `r df_reduced` \pause
+
+- $ESS = RSS_{reduced} - RSS_{reduced}$ = `r ess`
+
+- $df_{extra} = df_{reduced} - df_{full}$ = `r df_extra`\pause
+
+- $F$-statistic = $\frac{ESS / df_{extra}}{RSS_{full} / df_{full}}$ = `r fstat`.
+
+## Compare observed `r fstat` to a $F_{1, 18}$ Distribution
+
+```{r}
+x <- seq(0, 9, length = 100)
+y <- df(x, 1, 18)
+
+which_x <- x > fstat
+polydf <- data.frame(polyx = c(min(x[which_x]), x[which_x], max(x[which_x]), min(x[which_x])),
+                     polyy = c(0, y[which_x], 0, 0))
+qplot(x, y, geom = "line") +
+  geom_polygon(data = polydf, mapping = aes(x = polyx, y = polyy), 
+               fill = "blue", alpha = 3/4, color = "blue", lwd = 1)
+```
+
+
+## Compare observed `r fstat` to a $F_{1, 18}$ Distribution
+
+```{r, echo = TRUE}
+pf(7.84, df1 = 1, df2 = 18, lower.tail = FALSE)
+```
+
+- Moderate evidence to suggest a treatment effect.
+
+## In R
+
+```{r, echo = TRUE}
+aout_add <- aov(Score ~ Company + Treat, data = case1302)
+anova(aout_add)
+```
+
+## Get out Coefficient Estimates
+
+```{r, echo = TRUE}
+t(t(coef(aout_add)))
+```
+
+## Get Confidence Intervals of Effects
+
+```{r, echo = TRUE}
+confint(aout_add)
+```
+
+
+
+

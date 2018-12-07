@@ -1,0 +1,42 @@
+---
+title: "Chapter 6 Case Studies"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)
+theme_set(theme_bw())
+knitr::opts_chunk$set(echo = TRUE, fig.height = 3, fig.width = 4, fig.align = "center")
+```
+
+# Case Study 6.1.1: Discrimination Against the Handicapped
+
+The U.S. Vocational Rehabilitation Act of 1973 prohibited discrimination against people with physical disabilities. The act defined a handicapped person as any individual who had a physical or mental impairment that limits the person's major life activities. Approximately 44 million U.S. citizens fit that definition. In 1984, 9 million were in the labor force, and these individuals had an unemployment rate of 7%, compared to 4.5% in the nonimpaired labor force.
+
+One study explored how physical handicaps affect people's perception of employment qualifications. The researchers prepared five videotaped job interviews, using the same two male actors for each. A set script was designed to reflect an interview with an applicant of average qualifications. The tapes differed only in that the applicant appeared with a different handicap. In one, he appeared in a wheelchair; in a second, he appeared on crutches; in another, his hearing was impaired; in a fourth, he appeared to have one leg amputated; and in the final tape, he appeared to have no handicap.
+
+Seventy undergraduate students from a U.S. university were randomly assigned to view the tapes, fourteen to each tape. After viewing the tape, each subject rated the qualifications of the applicant on a 0- to 10-point applicant qualification scale. The question is, do subjects systematically evaluate qualifications differently according to the candidates handicap? If so, which handicaps produce the different evaluations?
+
+You can load these data into R using
+```{r}
+library(Sleuth3)
+data("case0601")
+qplot(Handicap, Score, data = case0601, geom = "boxplot")
+```
+
+# Case Study 6.1.2: Pre-existing Preferences of Fish
+
+Charles Darwin proposed that sexual selection by females could explain the evolution of elaborate characteristics in males that appear to decrease their capacity to survive. In contrast to the usual model stressing the co-evolution of the female preference with the preferred male trait, A. L. Basolo proposed and tested a selection model in which females have a pre-existing bias for a male trait, even before males of the same species possess it. She studied a Central American genus of small fish. The males in some species of the genus develop brightly colored swordtails at sexual maturity. For her study, Basolo selected one species in the genus --- the Southern Platyfish --- whose males do not naturally develop the swordtails.
+
+Six pairs of males were surgically given artificial, plastic swordtails. One male of each pair received a bright yellow sword, while the other received a transparent sword. The males in a pair were placed in closed compartments at opposite ends of a fish tank. One at a time, females were placed in a central compartment, where they could choose to engage in courtship activity with either of the males by entering a side compartment adjacent to it. Of the total time spent by each female engaged in courtship during a 20-minute observation period, the percentages of time spent with the yellow-sword male were recorded. Did females show a preference for the males that were given yellow swordtailes?
+
+You can load these data into R using
+```{r}
+library(Sleuth3)
+data("case0602")
+qplot(Pair, Percentage, data = case0602, geom = "boxplot")
+```
+
+

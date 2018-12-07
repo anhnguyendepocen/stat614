@@ -1,0 +1,12 @@
+---
+title: "License"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+All material that I have personally created for Statistics 614 at American University in the Fall of 2018 and have presented on this website is licenced under the Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0). You may get a summary of it [here](https://creativecommons.org/licenses/by-nc-sa/4.0/) and the full license [here](https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode).

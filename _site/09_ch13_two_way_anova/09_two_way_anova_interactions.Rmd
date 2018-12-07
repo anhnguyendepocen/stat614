@@ -1,0 +1,623 @@
+---
+title: "Two-way ANOVA Interactions"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output:
+  beamer_presentation:
+    theme: "metropolis"
+    slide_level: 2
+urlcolor: "blue"
+---
+
+```{r setup, include=FALSE}
+ggplot2::theme_set(
+  ggplot2::theme_bw()
+  )
+knitr::opts_chunk$set(echo = FALSE,
+                      fig.height = 2.5, 
+                      fig.width = 4, 
+                      fig.align = "center")
+```
+
+## Objectives
+
+- Gain intuitive understanding of Two-way ANOVA model.
+- Chapter 13 in the book.
+
+## Pygmalion Effect Case Study
+
+- Pygmalion Effect: high expectations of a supervisor translate into improved performance of subordinate.
+- A company of soldiers contains three platoons each.
+- Within each company, one platoon was randomly selected to be the "Pygmalion platoon."
+- The platoon leader in the Pygmalion platoon was told by the army psychologist that his platoon was predicted to be superior.
+- At end of basic training, all soldiers in each platoon were given a skill test.
+- Data consist of average scores for each platoon.
+
+## The data
+```{r, echo = TRUE}
+library(Sleuth3)
+data("case1302")
+head(case1302)
+```
+
+## When to use two-way ANOVA
+
+1. You have a quantitative response variable.
+
+2. You have two categorical explanatory variables.
+
+3. It is called *two-way* ANOVA because each observational unit may be placed into a two-way table according to group status in both categorical variables
+
+\begin{center}
+\begin{tabular}{|l|l|l|l|l|l|l|l|l|l|l|}
+\hline
+Company &1&2&3&4&5&6&7&8&9&10\\
+\hline
+Pyg &&&&&&&&&&\\
+\hline
+Non-Pyg &&&&&&&&&&\\
+\hline
+\end{tabular}
+\end{center}
+
+## One-way ANOVA Model
+
+- Model: $Y_{ij} = \mu_i + \epsilon_{ij}$ \bigskip
+- $Y_{ij}$: Value of observational unit $j$ of group $i$. \bigskip
+- $\mu_i$: Mean value for group $i$.\bigskip
+- $\epsilon_{ij}$: Individual-specific noise for observational unit $j$ of group $i$. Assumed to have mean 0 and variance $\sigma^2$. \bigskip
+- $\sigma^2$ is assumed to be the **same** for all observational units of all groups
+
+
+## Equivalent One-way ANOVA Model
+
+- Model: $Y_{ij} = \mu + \alpha_i + \epsilon_{ij}$ \bigskip
+- $\mu$: baseline value.\bigskip
+- $\alpha_i$: Mean difference from baseline for group $i$.\bigskip
+
+
+## Equivalent One-way ANOVA Model
+
+- $\mu_i = \mu + \alpha_i$\bigskip
+- In R, the baseline is the mean of the first group listed when you use the `levels()` command.\bigskip
+- In SAS, it is the mean of the last group listed.\bigskip
+- In some other softwares, baseline is the average of the group means.\bigskip
+- Using this notation makes generalizing to two-way ANOVA easier.
+
+## Two-way ANOVA model: The additive model
+
+- Model: $Y_{ijk} = \mu + \alpha_i + \beta_j + \epsilon_{ijk}$ 
+- $Y_{ijk}$: Value of observational unit $k$ of group $i$ of the first categorical variable and group $j$ of the second categorical variable. \pause
+- $\mu$: baseline value.
+- $\alpha_i$: Additive effect of being in group $i$ in categorical variable 1.
+- $\beta_j$: Additive effect of being in group $j$ in categorical variable 2.\pause
+- $\epsilon_{ijk}$: Individual-specific noise for observational unit $k$ of group $i$ of the first categorical variable and group $j$ of the second categorical variable. Assumed to have mean 0 and variance $\sigma^2$. 
+- $\sigma^2$ is assumed to be the **same** for all observational units of all groups
+
+## Two-way ANOVA model **with interaction**
+
+- Model: $Y_{ijk} = \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij} + \epsilon_{ijk}$ \bigskip
+- $(\alpha\beta)_{ij}$: A single number, represents the *interaction* effect.\bigskip
+- This model says that every group has it's own mean, where a group is defined by the combination of both categorical variables.\bigskip
+
+## Two-way ANOVA model **with interaction**
+
+- $Y_{ijk} = \mu + \alpha_i + \beta_j + (\alpha\beta)_{ij} + \epsilon_{ijk}$ \bigskip
+
+**is equivalent to**
+
+- $Y_{\ell k} = \mu + \tau_{\ell k} + \epsilon_{\ell_k}$, where $\ell = (i, j)$. 
+- *This is the exact same thing as the one-way ANOVA model.*
+- Because each group is allowed to have its own unconstrained mean. In the additive-effect model, there are constraints.
+- People often call the two-way ANOVA model with interaction the cell-means model.
+
+
+
+## The Additive Model
+
+```{r}
+suppressMessages(library(tidyverse))
+library(ggthemes)
+meanvalsc <- c(70, 77, 71, 64, 76, 72, 65, 68, 67, 74)
+df_add <- data_frame(score = c(meanvalsc, meanvalsc + 8), 
+                     group = c(rep("Control", length(meanvalsc)),
+                               rep("Pygmalion", length(meanvalsc))),
+                     company = rep(1:length(meanvalsc), 2))
+ggplot(data = df_add,
+       mapping = aes(x = company, 
+                     y = score, 
+                     col = group)) +
+  geom_point() +
+  geom_line() +
+  ggthemes::scale_color_colorblind() +
+  scale_x_continuous(breaks = 1:length(meanvalsc)) +
+  ylab("mean score") +
+  xlab("company")
+```
+
+## The Additive Model
+
+- The additive effect of treatment is the same for all companies.
+
+```{r}
+df_arrows <- data_frame(x = 1:length(meanvalsc),
+                        xend = 1:length(meanvalsc),
+                        y = meanvalsc,
+                        yend = meanvalsc + 8)
+ggplot(data = df_add,
+       mapping = aes(x = company, 
+                     y = score, 
+                     col = group)) +
+  geom_point() +
+  geom_line() +
+  ggthemes::scale_color_colorblind() +
+  scale_x_continuous(breaks = 1:length(meanvalsc)) +
+  geom_segment(data = df_arrows, mapping = aes(x = x, xend = xend, y = y, yend = yend), arrow = arrow(length = unit(0.1, "inches")), col = "black") +
+  ylab("mean score") +
+  xlab("company")
+```
+
+## The Additive Model
+
+- The additive effect of treatment is the same for all companies.
+
+```{r}
+ggplot() +
+  scale_x_continuous(breaks = 1:length(meanvalsc)) +
+  geom_segment(data = df_arrows, mapping = aes(x = x, xend = xend, y = y, yend = yend), arrow = arrow(length = unit(0.1, "inches")), col = "black") +
+  ylab("mean score") +
+  xlab("company")
+```
+
+## Cell Means Model
+
+```{r}
+meanvalsc <- c(70, 77, 71, 64, 76, 72, 65, 68, 67, 74)
+effect_vec <- c(-2, 1, 3, 5, 8, 9, 1, 5, -4, 1)
+df_add <- data_frame(score = c(meanvalsc, meanvalsc + effect_vec), 
+                     group = c(rep("Control", length(meanvalsc)),
+                               rep("Pygmalion", length(meanvalsc))),
+                     company = rep(1:length(meanvalsc), 2))
+ggplot(data = df_add,
+       mapping = aes(x = company, 
+                     y = score, 
+                     col = group)) +
+  geom_point() +
+  geom_line() +
+  ggthemes::scale_color_colorblind() +
+  scale_x_continuous(breaks = 1:length(meanvalsc)) +
+  ylab("mean score") +
+  xlab("company")
+```
+
+## Cell Means Model
+
+- The additive effect differs based on which company you are looking at.
+- Not as interpretable if dependent on the company.
+
+```{r}
+df_arrows <- data_frame(x = 1:length(meanvalsc),
+                        xend = 1:length(meanvalsc),
+                        y = meanvalsc,
+                        yend = meanvalsc + effect_vec)
+ggplot(data = df_add,
+       mapping = aes(x = company, 
+                     y = score, 
+                     col = group)) +
+  geom_point() +
+  geom_line() +
+  ggthemes::scale_color_colorblind() +
+  scale_x_continuous(breaks = 1:length(meanvalsc)) +
+  geom_segment(data = df_arrows, mapping = aes(x = x, xend = xend, y = y, yend = yend), arrow = arrow(length = unit(0.1, "inches")), col = "black") +
+  ylab("mean score") +
+  xlab("company")
+```
+
+
+## Cell Means Model
+
+- The additive effect differs based on which company you are looking at.
+- Not as interpretable if dependent on the company.
+
+```{r}
+ggplot() +
+  scale_x_continuous(breaks = 1:length(meanvalsc)) +
+  geom_segment(data = df_arrows, mapping = aes(x = x, xend = xend, y = y, yend = yend), arrow = arrow(length = unit(0.1, "inches")), col = "black") +
+  ylab("mean score") +
+  xlab("company")
+```
+
+
+
+## Real Data
+
+```{r}
+ggplot(data = case1302, mapping = aes(x = Company, y = Score, color = Treat)) +
+  geom_point() +
+  ggthemes::scale_color_colorblind()
+```
+
+## Quick Interaction Plots in R
+
+```{r, echo = TRUE}
+interaction.plot(x.factor = case1302$Company, 
+                 trace.factor = case1302$Treat, 
+                 response = case1302$Score)
+```
+
+## ggplot2 Interaction Plots in R
+
+\small
+```{r, echo = TRUE}
+qplot(x = Company, y = Score, 
+      color = Treat, group = Treat, 
+      data = case1302, geom = "blank") +
+  stat_summary(fun.y = mean, geom = "line")
+```
+\normalsize
+
+## Testing for Interactions
+
+- Often, the first-step of a two-way ANOVA is to test for interactions. 
+- If we don't see strong evidence for interactions, we often proceed to assume additivity (due to its better interpretability).
+
+- $H_0: (\alpha\beta)_{ij} = 0$ for all $i$ and all $j$.
+
+- $H_A:$ At least one $(\alpha\beta)_{ij} \neq 0$.
+
+## F-test for Interaction Effects
+
+1. Estimate the group means under the full model (cell-means model; with interactions) and the reduced model (addititve model; without interactions).
+
+2. Calculate residuals under both models: $RSS_{full}$ and $RSS_{reduced}$.
+
+3. Calculate the extra sums of squares: $ESS = RSS_{reduced} - RSS_{full}$.
+
+4. Calculate $F$-statistic: $\frac{ESS / df_{extra}}{RSS_{full} / df_{full}}$
+
+5. Compare to an $F_{df_{extra}, df_{full}}$ distribution.
+
+## Degrees of Freedom
+
+- Let $n$ be the total number of observational units.
+
+- In the full (cell-means) model, there are $I\times J$ parameters (how many groups there are, just like in one-way ANOVA).
+
+- $df_{full} = n - IJ$
+
+- In the reduced (additive) model, there are $I + J - 1$ parameters ($I-1$ effects for variable 1, $J-1$ effects for variable 2, and the baseline value).
+
+- $df_{reduced} = n - I - J + 1$
+
+- $df_{extra} = IJ - I - J + 1$
+
+## Estimate Under Reduced
+
+- Model: $Y_{ijk} = \mu + \alpha_{i} + \beta_{j} + \epsilon_{ijk}$
+
+- Under **balanced** designs (sample size is the same for all groups), the estimates are provided below.
+
+- $\hat{\alpha}_i = \bar{Y}_{i\cdot\cdot} - \bar{Y}_{1\cdot\cdot}$
+
+- $\hat{\beta}_j = \bar{Y}_{\cdot j\cdot} - \bar{Y}_{\cdot 1\cdot}$
+
+- $\hat{\mu} = \bar{Y}_{\cdot 1 \cdot} + \bar{Y}_{1\cdot \cdot} - \bar{Y}_{\cdot\cdot\cdot}$
+
+- Mean estimate in cell $(i,j)$ = $\bar{Y}_{\cdot j \cdot} + \bar{Y}_{i\cdot \cdot} - \bar{Y}_{\cdot\cdot\cdot}$
+
+- Estimates are much more complicated in non-balanced designs.
+
+## Reduced (Additive) Model
+
+- Mean Estimates
+
+```{r}
+aout_add <- aov(Score ~ Company + Treat, data = case1302)
+
+case1302$est_add <- aout_add$fitted.values
+case1302$lower_add <- as.numeric(case1302$Company) - 0.2
+case1302$upper_add <- as.numeric(case1302$Company) + 0.2
+
+ggplot(data = case1302, mapping = aes(x = Company, y = Score, color = Treat)) +
+  geom_point() +
+  ggthemes::scale_color_colorblind() +
+  geom_segment(mapping = aes(x = lower_add, xend = upper_add, y = est_add, yend = est_add))
+```
+
+## Reduced (Additive) Model
+
+- Effect size estimate same for all groups
+
+```{r, warning=FALSE}
+case1302 %>%
+  group_by(Company, Treat) %>%
+  summarize(mean = mean(est_add)) %>%
+  spread(key = Treat, value = mean) ->
+  arrow_df
+
+ggplot(data = case1302, mapping = aes(x = Company, y = Score, color = Treat)) +
+  geom_point(color = NA) +
+  ggthemes::scale_color_colorblind() +
+  geom_segment(mapping = aes(x = lower_add, xend = upper_add, y = est_add, yend = est_add)) +
+  geom_segment(data = arrow_df, mapping = aes(x = Company, xend = Company, y = Control, yend = Pygmalion), color = "black", arrow = arrow(length = unit(0.1, "inches")))
+```
+
+
+
+
+## Reduced (Additive) Model
+
+- Find the Residuals
+
+```{r}
+ggplot(data = case1302, mapping = aes(x = Company, y = Score, color = Treat)) +
+  geom_point() +
+  ggthemes::scale_color_colorblind() +
+  geom_segment(mapping = aes(x = lower_add, xend = upper_add, y = est_add, yend = est_add)) +
+  geom_segment(aes(x = Company, xend = Company, y = Score, yend = est_add), col = "blue", lty = 1, alpha = 1/2, lwd = 1)
+```
+
+## Estimate Under Full
+
+- Model: $Y_{ijk} = \mu + \alpha_{i} + \beta_{j} + (\alpha\beta)_{ij} + \epsilon_{ijk}$
+
+- Mean estimate in cell $(i,j)$ = $\bar{Y}_{ij\cdot}$
+
+## Full (Cell-means) Model
+
+- Mean Estimates
+
+```{r}
+aout_int <- aov(Score ~ Company * Treat, data = case1302)
+
+case1302$est_int <- aout_int$fitted.values
+
+ggplot(data = case1302, mapping = aes(x = Company, y = Score, color = Treat)) +
+  geom_point() +
+  ggthemes::scale_color_colorblind() +
+  geom_segment(mapping = aes(x = lower_add, xend = upper_add, y = est_int, yend = est_int))
+```
+
+## Full (Cell-means) Model
+
+- Effect size estimate *different* for all groups
+
+```{r, warning=FALSE}
+case1302 %>%
+  group_by(Company, Treat) %>%
+  summarize(mean = mean(est_int)) %>%
+  spread(key = Treat, value = mean) ->
+  arrow_df
+
+ggplot(data = case1302, mapping = aes(x = Company, y = Score, color = Treat)) +
+  geom_point(color = NA) +
+  ggthemes::scale_color_colorblind() +
+  geom_segment(mapping = aes(x = lower_add, xend = upper_add, y = est_int, yend = est_int)) +
+  geom_segment(data = arrow_df, mapping = aes(x = Company, xend = Company, y = Control, yend = Pygmalion), color = "black", arrow = arrow(length = unit(0.1, "inches")))
+```
+
+## Full (Cell-means) Model
+
+- Find the Residuals
+
+```{r}
+ggplot(data = case1302, mapping = aes(x = Company, y = Score, color = Treat)) +
+  geom_point() +
+  ggthemes::scale_color_colorblind() +
+  geom_segment(mapping = aes(x = lower_add, xend = upper_add, y = est_int, yend = est_int)) +
+  geom_segment(aes(x = Company, xend = Company, y = Score, yend = est_int), col = "blue", lty = 1, alpha = 1/2, lwd = 1)
+```
+
+## Sum of Squared Residuals
+
+```{r}
+n <- nrow(case1302)
+Ival <- nlevels(case1302$Company)
+Jval <- nlevels(case1302$Treat)
+rss_full <- sum(aout_int$residuals^2)
+df_full <- n - Ival * Jval
+rss_reduced <- sum(aout_add$residuals^2)
+df_reduced <- n - Ival - Jval + 1
+ess <- rss_reduced - rss_full
+df_extra <- df_reduced - df_full
+fstat <- (ess / df_extra) / (rss_full / df_full)
+```
+
+- $RSS_{full}$ = `r rss_full`
+
+- $df_{full}$ = $n - IJ$ = `r n` - `r Ival` $\times$ `r Jval` = `r df_full` \pause
+
+- $RSS_{reduced}$ = `r rss_reduced`
+
+- $df_{reduced}$ = $n - I - J + 1$ = `r n` - `r Ival` - `r Jval` + 1 = `r df_reduced` \pause
+
+- $ESS = RSS_{reduced} - RSS_{full}$ = `r ess`
+
+- $df_{extra} = df_{reduced} - df_{full}$ = `r df_extra`\pause
+
+- $F$-statistic = $\frac{ESS / df_{extra}}{RSS_{full} / df_{full}}$ = `r fstat`.
+
+## Compare `r fstat` to a $F_{9, 9}$ Distribution
+
+```{r}
+x <- seq(0, 5, length = 100)
+y <- df(x, 9, 9)
+
+which_x <- x > fstat
+polydf <- data.frame(polyx = c(min(x[which_x]), x[which_x], max(x[which_x]), min(x[which_x])),
+                     polyy = c(0, y[which_x], 0, 0))
+qplot(x, y, geom = "line") +
+  geom_polygon(data = polydf, mapping = aes(x = polyx, y = polyy), 
+               fill = "blue", alpha = 3/4)
+```
+
+## Compare `r fstat` to a $F_{9, 9}$ Distribution
+
+```{r, echo = TRUE}
+pf(0.667, df1 = 9, df2 = 9, lower.tail = FALSE)
+```
+
+- There is no evidence that the there is an interaction between Company and Treatment.
+
+## In R
+
+```{r, echo = TRUE}
+aout_int <- aov(Score ~ Company * Treat, data = case1302)
+anova(aout_int)
+```
+
+## What those numbers mean
+
+\begin{center}
+\begin{tabular}{llllll}
+& Df & Sum Sq & Mean Sq & F value & Pr(>F) \\
+Company & blah & blah & blah & blah & blah\\
+Treat & blah & blah & blah & blah & blah\\
+Company:Treat & $df_{extra}$ & $ESS$ & $ESS / df_{extra}$ & $F$-stat & $p$-value\\
+Residuals & $df_{full}$ & $RSS_{full}$ & $RSS_{full} / df_{full}$ & & \\
+\end{tabular}
+\end{center}
+
+## R syntax
+
+- `*`: include this interaction and all smaller-order terms
+- `:`: include this interaction
+- `+`: add another term
+- `-`: remove a term
+
+E.g.
+
+- `Company + Treat` fits $\mu + \alpha_i + \beta_j$
+- `Company * Treat` fits $\mu + \alpha_i + \beta_j + (\alpha\beta)_{ij}$
+- `Company * Treat - Company:Treat` fits $\mu + \alpha_i + \beta_j$
+
+
+# A Closer Look at Additivity
+
+## Additive With Three Categories 
+
+- More than two categories in each variable.
+
+```{r}
+meanvalsc <- c(70, 77, 71, 64, 76, 72, 65, 68, 67, 74)
+df_add <- data_frame(score = c(meanvalsc, meanvalsc + 8, meanvalsc + 12), 
+                     group = c(rep("Control", length(meanvalsc)),
+                               rep("Pygmalion", length(meanvalsc)),
+                               rep("AnotherGroup", length(meanvalsc))),
+                     company = rep(1:length(meanvalsc), 3))
+ggplot(data = df_add,
+       mapping = aes(x = company, 
+                     y = score, 
+                     col = group)) +
+  geom_point() +
+  geom_line() +
+  ggthemes::scale_color_colorblind() +
+  scale_x_continuous(breaks = 1:length(meanvalsc)) +
+  ylab("mean score") +
+  xlab("company")
+```
+
+
+## Additive With Three Categories 
+
+- The additive effect of treatment is the same for all companies.
+
+```{r}
+df_arrows <- data_frame(x = 1:length(meanvalsc),
+                        xend = 1:length(meanvalsc),
+                        y = meanvalsc,
+                        yend = meanvalsc + 8)
+ggplot(data = df_add,
+       mapping = aes(x = company, 
+                     y = score, 
+                     col = group)) +
+  geom_point() +
+  geom_line() +
+  ggthemes::scale_color_colorblind() +
+  scale_x_continuous(breaks = 1:length(meanvalsc)) +
+  geom_segment(data = df_arrows, mapping = aes(x = x, xend = xend, y = y, yend = yend), arrow = arrow(length = unit(0.1, "inches")), col = "black") +
+  ylab("mean score") +
+  xlab("company")
+```
+
+
+## Additive With Three Categories 
+
+- The additive effect of treatment is the same for all companies.
+
+```{r}
+df_arrows <- data_frame(x = 1:length(meanvalsc),
+                        xend = 1:length(meanvalsc),
+                        y = meanvalsc + 8,
+                        yend = meanvalsc + 12)
+ggplot(data = df_add,
+       mapping = aes(x = company, 
+                     y = score, 
+                     col = group)) +
+  geom_point() +
+  geom_line() +
+  ggthemes::scale_color_colorblind() +
+  scale_x_continuous(breaks = 1:length(meanvalsc)) +
+  geom_segment(data = df_arrows, mapping = aes(x = x, xend = xend, y = y, yend = yend), arrow = arrow(length = unit(0.1, "inches")), col = "black") +
+  ylab("mean score") +
+  xlab("company")
+```
+
+
+## NON-Additive With Three Categories 
+
+- More than two categories in each variable.
+
+```{r}
+meanvalsc <- c(70, 77, 71, 64, 76, 72, 65, 68, 67, 74)
+df_add <- data_frame(score = c(meanvalsc, meanvalsc + 8, meanvalsc + effect_vec), 
+                     group = c(rep("Control", length(meanvalsc)),
+                               rep("Pygmalion", length(meanvalsc)),
+                               rep("AnotherGroup", length(meanvalsc))),
+                     company = rep(1:length(meanvalsc), 3))
+ggplot(data = df_add,
+       mapping = aes(x = company, 
+                     y = score, 
+                     col = group)) +
+  geom_point() +
+  geom_line() +
+  ggthemes::scale_color_colorblind() +
+  scale_x_continuous(breaks = 1:length(meanvalsc)) +
+  ylab("mean score") +
+  xlab("company")
+```
+
+## NON-Additivity
+
+- Same direction of an effect, but non-additive
+
+```{r}
+meanvalsc <- c(70, 77, 71, 64, 76, 72, 65, 68, 67, 74)
+df_add <- data_frame(score = c(meanvalsc, meanvalsc + 4:13), 
+                     group = c(rep("Control", length(meanvalsc)),
+                               rep("Pygmalion", length(meanvalsc))),
+                     company = rep(1:length(meanvalsc), 2))
+ggplot(data = df_add,
+       mapping = aes(x = company, 
+                     y = score, 
+                     col = group)) +
+  geom_point() +
+  geom_line() +
+  ggthemes::scale_color_colorblind() +
+  scale_x_continuous(breaks = 1:length(meanvalsc)) +
+  ylab("mean score") +
+  xlab("company")
+```
+
+## What to do when there are significant interactions?
+
+- The best course of action is to show an interaction plot (like the one above).
+\small
+```{r, echo = TRUE, fig.height=2}
+qplot(Company, Score, group = Treat,
+      color = Treat, geom = "blank",
+      data = case1302) +
+  stat_summary(fun.y = mean, geom = "line")
+```
+\normalsize
+

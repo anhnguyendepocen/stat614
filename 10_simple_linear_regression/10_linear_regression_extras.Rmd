@@ -1,0 +1,440 @@
+---
+title: "Extra Considerations"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output:
+  beamer_presentation:
+    theme: "metropolis"
+    slide_level: 2
+urlcolor: "blue"
+---
+
+```{r setup, include=FALSE}
+ggplot2::theme_set(
+  ggplot2::theme_bw()
+  )
+knitr::opts_chunk$set(echo = FALSE,
+                      fig.height = 2.5, 
+                      fig.width = 4, 
+                      fig.align = "center")
+```
+
+## Learning Objectives
+
+- Different interval estimates at different levels of the explanatory variable.
+
+- Extrapolation vs interpolation
+
+- Correlation
+
+- $R^2$
+
+## Model
+
+- $Y_i = \beta_0 + \beta_1 X_i + \epsilon_i$\pause
+- $Y_i$: distance from earth of nebula $i$
+- $X_i$: recession velocity of nebula $i$
+- $\beta_0$: The intercept of the mean line ("regression line")
+    - Mean when $X_i = 0$\pause
+- $\beta_1$: Slope of the regression line.
+    - Difference in mean distance between two nebula when they differ by only 1 velocity unit.\pause
+- $\beta_0 + \beta_1 X_i$: the mean distance at velocity $X_i$\pause
+- $\epsilon_i$: Individual noise with mean 0 and variance $\sigma^2$. Ideally normally distributed.
+
+# Various Intervals
+
+## Pointwise confidence intervals
+
+- Suppose we want to estimate the mean at a single value of $X_0$.
+
+- Parameter: $\beta_0 + \beta_1 X_0$
+
+- Point Estimate: $\hat{\beta}_0 + \hat{\beta}_1 X_0$
+
+- Confidence interval: estimate + multiplier * standard error
+
+## Pointwise confidence intervals
+
+- You can show that the standard error of $\hat{\beta}_0 + \hat{\beta}_1 X_0$ is
+$$
+\hat{\sigma} \sqrt{\frac{1}{n} + \frac{(X_0 - \bar{X})^2}{(n - 1)s_X^2}}
+$$
+
+- You can also show that
+$$
+\frac{\hat{\beta}_0 + \hat{\beta}_1 X_0 - (\beta_0 + \beta_1 X_0)}{SE(\hat{\beta}_0 + \hat{\beta}_1 X_0)} \sim t_{n-2}
+$$
+
+- You an use this $t$-ratio in the usual ways to run hypothesis tests and get confidence intervals.
+$$
+\hat{\beta}_0 + \hat{\beta}_1 X_0 \pm t_{n-2}(0.975)SE(\hat{\beta}_0 + \hat{\beta}_1 X_0)
+$$
+
+## Point-wise confidence intervals in R
+
+```{r, echo = TRUE}
+library(Sleuth3)
+data("case0701")
+lmout <- lm(Distance ~ Velocity, data = case0701)
+predict(lmout, newdata = data.frame(Velocity = 100), 
+        interval = "confidence")
+```
+
+## Plotting pointwise confidence intervals in R
+
+```{r, echo = TRUE}
+library(ggplot2)
+qplot(Velocity, Distance, data = case0701, geom = "point") +
+  geom_smooth(method = "lm")
+```
+
+
+## Simultaneous Confidence Bands
+
+- Sometimes you want to ask "Where is the regression line?"
+
+- You can capture the **entire regression line** with 95% confidence with
+$$
+\hat{\beta}_0 + \hat{\beta}_1 X_0 \pm \sqrt{2 F_{2, n-2}(0.95)}SE(\hat{\beta}_0 + \hat{\beta}_1 X_0)
+$$
+
+- $F_{2, n-2}(0.95)$ is the 95th percentile of an $F$ distribution with 2 numerator degrees of freedom and $n-2$ denominator degrees of freedom.
+
+- No easy way to get these bands in R without a third package.
+
+- The bands in `qplot()` are **pointwise** confidence intervals, **not** simultaneous confidence bands
+
+## Prediction intervals
+
+- Sometimes, you want to get likely values for future observations at a given value of $X_0$
+
+- Answers question "what are likely distances of a nebula at a given velocity?"
+
+- This is **different** from "what are likely mean distances at a given velocity?"
+
+
+## Prediction intervals
+
+- Predict a future observation with its estimated mean.
+
+- Variability in prediction consists of two components.
+
+\begin{align*}
+Y& - Pred(Y|X_0) = Y - (\hat{\beta}_0 + \hat{\beta}_1 X_0)\\
+&=Y - (\beta_0 + \beta_1 X_0) + [(\beta_0 + \beta_1 X_0) -  (\hat{\beta}_0 + \hat{\beta}_1 X_0)]
+\end{align*}
+
+- Variance of first term is $\sigma^2$
+
+- Variance of second term is $SD(\hat{\beta}_0 + \hat{\beta}_1 X_0)$
+
+- Variance of prediction is sum of these two variances.
+
+## Prediction intervals
+
+- Variance of $Y - Pred(Y|X_0) = \sigma^2 + SD(\hat{\beta}_0 + \hat{\beta}_1 X_0)$
+
+- Standard error of prediction is $\sqrt{\hat{\sigma}^2 + SE(\hat{\beta}_0 + \hat{\beta}_1 X_0)}$
+
+- Prediction interval is 
+$$
+\hat{\beta}_0 + \hat{\beta}_1 X_0 \pm t_{n-2}(0.975)\sqrt{\hat{\sigma}^2 + SE(\hat{\beta}_0 + \hat{\beta}_1 X_0)}
+$$
+
+## Prediction intervals
+
+- For prediction intervals, **the central limit theorem does not save us**.
+
+- Prediction intervals are **very** sensitive to violations in normality.
+
+- This is because we are trying to account for the variability in **a single observation**.
+
+## Prediction intervals in R
+
+```{r, echo = TRUE}
+predict(lmout, newdata = data.frame(Velocity = 100), 
+        interval = "prediction")
+```
+
+## Comparison of Intervals
+
+```{r, message=FALSE}
+library(tidyverse)
+npoints <- 100
+newdf <- data.frame(Velocity = seq(min(case0701$Velocity), max(case0701$Velocity), length = npoints))
+
+sdest <- sigma(lmout)
+ci_out <- predict(lmout, newdata = newdf, interval = "confidence", se.fit = TRUE)
+pred_out <- predict(lmout, newdata = newdf, interval = "prediction", se.fit = TRUE)
+
+fmult <- sqrt(2 * qf(p = 0.95, df1 = 2, df2 = nrow(case0701) - 2))
+
+newdf$Fit <- ci_out$fit[, 1]
+data.frame(
+  Velocity   = c(newdf$Velocity, newdf$Velocity),
+  Bound      = c(rep("Lower", npoints), rep("Upper", npoints)),
+  Pointwise  = c(ci_out$fit[, 2], ci_out$fit[, 3]),
+  Bands      = c(newdf$Fit - fmult * ci_out$se.fit, newdf$Fit + fmult * ci_out$se.fit),
+  Prediction = c(pred_out$fit[, 2], pred_out$fit[, 3])
+  ) %>%
+  gather(key = "Type", value = "Value", Pointwise:Prediction) %>%
+  mutate(Group = paste0(Bound, Type)) ->
+  banddf
+```
+
+```{r}
+ggplot(data = case0701, mapping = aes(x = Velocity, y = Distance)) +
+  geom_point() +
+  geom_line(data = newdf, mapping = aes(x = Velocity, y = Fit), lty = 1, col = "black", lwd = 1, alpha = 1/2) +
+  geom_line(data = banddf, mapping = aes(x = Velocity, y = Value, group = Group, color = Type))
+  
+```
+
+
+# Extrapolation vs Interpolation
+
+## Definitions
+
+- **Interpolation**: Making estimates/predictions within the range of the data.
+
+- **Extapolation**: Making estimates/predictions outside the range of the data.
+
+- Interpolation is good. Extrapolation is bad.
+
+## Interpolation
+
+```{r}
+ggplot(data = case0701, mapping = aes(x = Velocity, y = Distance)) +
+  geom_point() +
+  geom_abline(slope = coef(lmout)[2], intercept = coef(lmout)[1], lwd = 1, col = "blue", alpha = 1/2) +
+  ylim(0, 2) +
+  geom_segment(data = data.frame(x = 600, 
+                                 xend = 600,
+                                 y = 0,
+                                 yend = coef(lmout)[1] + 600 * coef(lmout)[2]),
+               mapping = aes(x = x, xend = xend, y = y, yend = yend), 
+               lty = 2, color = "red", lwd = 1)
+```
+
+## Extrapolation
+
+```{r}
+ggplot(data = case0701, mapping = aes(x = Velocity, y = Distance)) +
+  geom_point() +
+  geom_abline(slope = coef(lmout)[2], intercept = coef(lmout)[1], lwd = 1, col = "blue", alpha = 1/2) +
+  ylim(0, 3.2) +
+  xlim(min(case0701$Velocity), 2000) +
+  geom_segment(data = data.frame(x = 1700, 
+                                 xend = 1700,
+                                 y = 0,
+                                 yend = coef(lmout)[1] + 1700 * coef(lmout)[2]),
+               mapping = aes(x = x, xend = xend, y = y, yend = yend), 
+               lty = 2, color = "red", lwd = 1)
+```
+
+
+## Why is extrapolation bad?
+
+1. Not sure if the linear relationship is the same outside the range of the data (because we don't have data there to see the relationship).
+
+2. Not sure if the variability is the same outside the range of the data (because we don't have data there to see the variability).
+
+## Changing Relationship
+
+```{r}
+X <- matrix(c(1200^2, 1200, 2400, 1), nrow = 2, byrow = TRUE)
+y <- t(t(c(coef(lmout)[1] + 1200 * coef(lmout)[2], coef(lmout)[2])))
+ab <- solve(X) %*% y
+
+dfparab <- data.frame(x = seq(1200, 2000, length = 100),
+                      y = rep(coef(lmout)[1] + 1200 * coef(lmout)[2], 100))
+
+ggplot(data = case0701, mapping = aes(x = Velocity, y = Distance)) +
+  geom_point() +
+  geom_abline(slope = coef(lmout)[2], intercept = coef(lmout)[1], lwd = 1, col = "blue", alpha = 1/2) +
+  ylim(0, 3.2) +
+  xlim(min(case0701$Velocity), 2000) +
+  geom_segment(data = data.frame(x = 1700, 
+                                 xend = 1700,
+                                 y = 0,
+                                 yend = coef(lmout)[1] + 1700 * coef(lmout)[2]),
+               mapping = aes(x = x, xend = xend, y = y, yend = yend), 
+               lty = 2, color = "red", lwd = 1) +
+  geom_line(data = dfparab, mapping = aes(x = x, y = y), lwd = 1, col = "blue", alpha = 1/2)
+```
+
+# Correlation
+
+## Correlation
+
+- Sample correlation is a measure of **linear** association.
+
+\begin{align*}
+r_{XY} &= \frac{Average\left((X_i - \bar{X})(Y_i - \bar{Y})\right)}{s_Xs_Y}\\
+&= \frac{\frac{1}{n-1}\sum_{i=1}^n(X_i - \bar{X})(Y_i - \bar{Y})}{s_Xs_Y}
+\end{align*}
+
+## Correlation Properties
+
+- No units.
+
+- Always between -1 and 1.
+
+- Closer to 0 means less **linear** association.
+
+- Closer to 1 or -1 means stronger **linear** association.
+
+- Correlation = -1 or 1 if and only if all points lie **exactly** on a straight line.
+
+- Useful as a summary statistic. Not usually useful for **inference**
+
+## Correlation 
+
+- Correlation can be misleading so **always** plot data
+
+
+## Correlation of 0, but Very Associated
+
+```{r}
+x <- runif(20, -1, 1)
+y <- c(sqrt(1 - x^2), - sqrt(1 - x^2))
+qplot(c(x, x), y)
+```
+
+## All these datasets have a correlation of 0.81
+```{r}
+data("anscombe")
+qplot(x1, y1, data = anscombe)
+```
+
+## All these datasets have a correlation of 0.81
+```{r}
+data("anscombe")
+qplot(x2, y2, data = anscombe)
+```
+
+## All these datasets have a correlation of 0.81
+```{r}
+data("anscombe")
+qplot(x3, y3, data = anscombe)
+```
+
+## All these datasets have a correlation of 0.81
+```{r}
+data("anscombe")
+qplot(x4, y4, data = anscombe)
+```
+
+## Correlation Intuition
+
+http://guessthecorrelation.com/
+
+# $R^2$ (Section 8.6)
+
+## Total Variability in $Y$
+
+```{r}
+library(ggthemes)
+orange <- colorblind_pal()(4)[4]
+xlim <- c(min(case0701$Velocity), max(case0701$Velocity))
+ybar <- mean(case0701$Distance)
+lmout <- lm(Distance ~ Velocity, data = case0701)
+fitvec <- fitted(lmout)
+qplot(Velocity, Distance, data = case0701) +
+  xlim(xlim) +
+  ggtitle("Total Variability in Y") +
+  geom_segment(data = data.frame(x = case0701$Velocity, 
+                                 xend = case0701$Velocity,
+                                 y = case0701$Distance,
+                                 yend = ybar),
+               mapping = aes(x = x, xend = xend, y = y, yend = yend),
+               color = "blue") +
+  geom_hline(yintercept = ybar, lty = 2, lwd = 1, color = orange) +
+  geom_line(data = data.frame(x = case0701$Velocity,
+                              y = fitvec), 
+            mapping = aes(x = x, y = y),
+            lty = 2, lwd = 1, color = orange)
+```
+
+## Residual Variability in $Y$
+
+```{r}
+
+qplot(Velocity, Distance, data = case0701) +
+  xlim(xlim) +
+  ggtitle("Residual Variability in Y") +
+  geom_segment(data = data.frame(x = case0701$Velocity, 
+                                 xend = case0701$Velocity,
+                                 y = case0701$Distance,
+                                 yend = fitvec),
+               mapping = aes(x = x, xend = xend, y = y, yend = yend),
+               color = "blue") +
+  geom_hline(yintercept = ybar, lty = 2, lwd = 1, color = orange) +
+  geom_line(data = data.frame(x = case0701$Velocity,
+                              y = fitvec), 
+            mapping = aes(x = x, y = y),
+            lty = 2, lwd = 1, color = orange)
+```
+
+## Variability in $Y$ explained by regression line
+
+```{r}
+lmout <- lm(Distance ~ Velocity, data = case0701)
+fitvec <- fitted(lmout)
+qplot(Velocity, Distance, data = case0701) +
+  xlim(xlim) +
+  ggtitle("Variability Explained by Regression") +
+  geom_segment(data = data.frame(x = case0701$Velocity, 
+                                 xend = case0701$Velocity,
+                                 y = ybar,
+                                 yend = fitvec),
+               mapping = aes(x = x, xend = xend, y = y, yend = yend),
+               color = "blue") +
+  geom_hline(yintercept = ybar, lty = 2, lwd = 1, color = orange) +
+  geom_line(data = data.frame(x = case0701$Velocity,
+                              y = fitvec), 
+            mapping = aes(x = x, y = y),
+            lty = 2, lwd = 1, color = orange)
+```
+
+## $R^2$
+
+$$
+R^2 = \frac{\text{Total Sum of Squares} - \text{Residual Sum of Squares}}{\text{Total Sum of Square}}
+$$
+$$
+= \frac{\text{Extra Sum of Squares}}{\text{Total Sum of Square}}
+$$
+
+## $R^2$ Properties
+
+- Proportion of variation explained by the regression line.
+
+- Close to 0 means weak linear relationship.
+
+- Close to 1 means strong linear relationship.
+
+- In physics, $R^2 = 0.99$ is good, $R^2 = 0.9$ is bad.
+
+- In social science and humanities, $R^2 = 0.25 - 0.5$ is really good.
+
+- In biology, you want $R^2$'s somewhere between those two.
+
+## $R^2$ and Correlation
+
+- The $R^2$ is **exactly** the correlation between $X$ and $Y$ squared. 
+
+- Useful as a summary statistic, not useful for inference.
+
+- **Cannot** use it to evaluate the fit of a linear regression line (same problems as correlation).
+
+
+
+
+
+
+
+
+
+
+

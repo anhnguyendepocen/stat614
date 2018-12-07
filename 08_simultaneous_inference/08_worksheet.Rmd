@@ -1,0 +1,117 @@
+---
+title: "Chapter 6 Worksheet"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output: pdf_document
+urlcolor: "blue"
+bibliography: "../bib/614_bib.bib"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, fig.height = 3, fig.width = 4, fig.align = "center")
+```
+
+
+The `sardine` data frame from @clarke1936variations contains the number of vertebrae and the location of 12,858 sardines. The data are available on Blackboard (as "sardine.rdata") and you can load it into R using (you will probably have to change the path):
+```{r, echo = TRUE}
+load("../data/sardine.rdata")
+head(sardine)
+```
+
+The `location` variable is coded by
+\begin{center}
+\begin{tabular}{l|l}
+Code & Location \\
+\hline
+1 & Alaska \\
+2 & British Columbia \\
+3 & San Francisco \\
+4 & Monterey \\
+5 & San Pedro \\
+6 & San Diego \\
+\end{tabular}
+\end{center}
+
+
+1. Do you think the assumptions are satisfied enough that ANOVA is an appropriate model to use?
+
+```{r}
+library(ggplot2)
+qplot(location, number, data = sardine, geom = "boxplot")
+```
+
+```{block}
+Though the data are clearly not normal, there is a large enough sample size that we can appeal to the central limit theorem. The equal variance and independence assumptions are not fixed by a large enough sample size, but they seem to be valid.
+```
+
+
+2. Regardless of your answer to part 1, run a test to see if the means are the same.
+
+```{r}
+aout <- aov(number ~ location, data = sardine)
+anova(aout)
+```
+
+```{block}
+We have strong evidence that the means are different ($p$ = 0.00029).
+```
+
+3. If we wanted to compare all pairs of locations, how many tests would we be performing?
+
+```{block}
+This is 6 choose 2, $\binom{6}{2} = 6 \times 5 / 2 = 15$. You can calculate this in R using `choose(6, 2)`.
+```
+
+
+4. For what pairs of locations do we have evidence that the sardines have different numbers of vertebrae? (use Tukey here)
+
+```{block}
+Remember that we need to adjust for multiple comparisons. Using Tukey-adjusted $p$-values, it seems that we have the most evidence for a difference between locations 4 and 2, 4 and 6, and possibly 4 and 3.
+```
+
+```{r}
+tout <- TukeyHSD(aout)
+tout
+```
+
+5. If you would have used Holm-adjusted $p$-values instead, would the evidence for the pairwise differences in part 4 be as strong?
+
+```{block}
+The small $p$-values actually aren't that different. The large $p$-values seem to be a little larger, though.
+```
+
+```{r}
+pairwise.t.test(sardine$number, sardine$location)
+```
+
+6. If the researchers would have suspected that vertebrae differ with colder climate *prior to looking at the data*, it might be reasonable to test if Alaskan and British Columbian sardines have different mean numbers of vertebrae. What model and hypotheses would you use to answer this question?
+
+```{block}
+- Model: $Y_{ij} = \mu_i + \epsilon_{ij}$
+- $Y_{ij}$ is the number of vertebrae for the $j$th sardine in the $i$th location.
+- $\mu_i$ is location $i$'s mean number of vertebrae.
+- The $\epsilon_{ij}$'s are independent noise with common variance $\sigma^2$.
+
+We would use
+- $H_0: \frac{\mu_1 + \mu_2}{2} - \frac{\mu_3 + \mu_4 + \mu_5 + \mu_6}{4} = 0$
+- $H_A: \frac{\mu_1 + \mu_2}{2} - \frac{\mu_3 + \mu_4 + \mu_5 + \mu_6}{4} \neq 0$
+```
+
+7. Test the hypotheses from part 6. State your conclusion.
+
+```{r, message=FALSE}
+## No evidence for a difference
+library(car)
+aout_2 <- aov(number ~ location - 1, data = sardine)
+coef(aout_2)
+coef_vec <- c(1/2, 1/2, -1/4, -1/4, -1/4, -1/4)
+linearHypothesis(aout_2, hypothesis.matrix = coef_vec)
+```
+
+
+
+
+
+
+
+# References

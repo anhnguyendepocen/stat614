@@ -1,0 +1,120 @@
+---
+title: "Simple Linear Regression Worksheet"
+author: "David Gerard"
+date: "`r Sys.Date()`"
+output: pdf_document
+urlcolor: "blue"
+bibliography: "../bib/614_bib.bib"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, eval = FALSE, fig.height = 3, fig.width = 4, fig.align = "center")
+```
+
+
+# LSD
+
+In @wagner1968correlation, the authors intravenously injected d-lysergic acid diethylamide (better known as LSD) into seven volunteer male subjects. They then instructed the subjects to solve a set of simple arithmetic problems as quickly as possible during a three minute period. These data are available in the data frame `lsd` on Blackboard. You may load the data using (you may need to change the path):
+```{r, echo = TRUE}
+load("./lsd.rdata")
+lsd
+```
+
+The variables in this data frame are: `conc`, the tissue concentration of LSD in nanograms of LSD per mL; and `score`, their performance score on the arithmetic questions as a percent of a control score.
+
+1. What do you think is the explanatory variable? What is the response variable? What are the observational units?
+
+```{block}
+`score` would be the response because it occurs after `conc`. So `conc` is the explanatory variable. The observational units are the seven individuals.
+```
+
+
+2. Make a plot to see if a linear model would be appropriate to fit to these data.
+
+```{r}
+## A linear model looks like a great idea
+library(ggplot2)
+qplot(conc, score, data = lsd)
+```
+
+3. Posit a model that explains the relationship between concentration and score.
+
+```{block}
+- $y_i = \beta_0 + \beta_1 x_i + \epsilon_i$
+- $y_i$: score of individual $i$
+- $x_i$: concentration of individual $i$
+- $\beta_0$: The $y$-intercept of the regression line. If we had data at 0, then we could interpret this as the mean score when an individual has no lsd. However, we do not have data at $x = 0$, so this parameter is limited to have the interpretation of just the $y$-intercept of the regression line.
+- $\beta_1$: The expected difference in mean scores between two individuals that differ only in one ng/mL concentration of LSD. We don't use "results" or "increases" or "decreases" here because from the description of the study design, it is not clear if the researchers randomly assigned these concentrations (for example, because they might not be able to control the concentrations).
+- $\epsilon_i$: Some noise
+```
+
+4. What assumptions are made about the distribution of the **explanatory** variable in the simple linear regression model?
+
+```{block}
+There are no assumptions about the distribution of the $X_i$'s. We have assumptions about the distribution of the $\epsilon_i$'s.
+```
+
+
+5. Fit a linear model of score on concentration. 
+
+```{r}
+lmout <- lm(score ~ conc, data = lsd)
+```
+
+6. Make a residual plot and assess the fit
+
+```{r}
+## Looks fine.
+residvec <- resid(lmout)
+fitvec <- fitted(lmout)
+qplot(fitvec, residvec) +
+  geom_hline(yintercept = 0)
+```
+
+7. Set up hypotheses to test if concentration is associated with score.
+
+```{block}
+- $H_0: \beta_1 = 0$
+- $H_A: \beta_1 \neq 0$
+```
+
+8. Test the above hypotheses and state a conclusion. Include confidence intervals and an interpretation of the slope estimate in this conclusion.
+
+```{r}
+summary(lmout)
+confint(lmout)
+```
+```{block}
+There is strong evidence that there is a relationship between `conc` and `score` ($p$ = 0.0019). We expect individuals that have a concentration 1 ng/mL higher to have test scores about 9 lower (95% CI of -12.9 to -5.1).
+```
+
+
+9. Suppose a new individual has a concentration of 4. What would be their predicted test score?
+
+```{r}
+predict(lmout, newdata = data.frame(conc = 4))
+```
+
+10. What would be a range of likely scores for that new individual?
+
+```{r}
+predict(lmout, newdata = data.frame(conc = 4), interval = "prediction")
+```
+
+11. What is the standard error of prediction as the sample size approaches infinity?
+
+```{block}
+As the sample size approaches infinity, we get very sure about the location of the regression line. So the only variability comes from the population variance. So the standard error approaches the population standard deviation, $\sigma$.
+```
+
+
+12. Suppose a new individual has a concentration of 9. What would you say to a fellow researcher who wanted to predict the test score?
+
+```{block}
+Extrapolation is bad. We can come up with a prediction, but don't hold your breath.
+```
+
+
+
+
+# References
