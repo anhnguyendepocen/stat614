@@ -127,6 +127,7 @@ coef(summary(lm2))
 ## Step-wise Regression in R
 
 - Use the `step()` function to do this automatically
+    - It actually uses AIC (not $p$-values) to choose between models, but the idea is similar. See later for AIC.
 
 \footnotesize
 ```{r, echo = TRUE}
