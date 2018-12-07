@@ -1,4 +1,5 @@
 name: "Stat614"
+output_dir: "../docs"
 navbar:
   title: "Teaching Website for Statistical Methods (Stat 614)"
   left:
